@@ -1,15 +1,15 @@
 import {useLoaderData, useSearchParams, useNavigate, Link} from 'react-router';
 import {getPaginationVariables, Analytics, Image, Money} from '@shopify/hydrogen';
 import {useVariantUrl} from '~/lib/variants';
-import type {Route} from './+types/collections.orologi';
+import type {Route} from './+types/collections.borse';
 import type {Filter, ProductFilter} from '@shopify/hydrogen/storefront-api-types';
 import * as React from 'react';
 
-// Collection ID for Orologi: 387925573878
-const OROLOGI_COLLECTION_ID = 'gid://shopify/Collection/387925573878';
+// Collection ID for Borse: 387924197622
+const BORSE_COLLECTION_ID = 'gid://shopify/Collection/387924197622';
 
 export const meta: Route.MetaFunction = ({data}) => {
-  return [{title: `Ruzza Orologi | ${data?.collection?.title ?? 'Orologi'}`}];
+  return [{title: `Ruzza Orologi | ${data?.collection?.title ?? 'Borse'}`}];
 };
 
 export async function loader(args: Route.LoaderArgs) {
@@ -53,7 +53,7 @@ async function loadCriticalData({context, request}: Route.LoaderArgs) {
   const [{collection}] = await Promise.all([
     storefront.query(COLLECTION_BY_ID_QUERY, {
       variables: {
-        id: OROLOGI_COLLECTION_ID,
+        id: BORSE_COLLECTION_ID,
         filters: filters.length > 0 ? filters : undefined,
         sortKey,
         reverse,
@@ -63,7 +63,7 @@ async function loadCriticalData({context, request}: Route.LoaderArgs) {
   ]);
 
   if (!collection) {
-    throw new Response(`Collection Orologi not found`, {
+    throw new Response(`Collection Borse not found`, {
       status: 404,
     });
   }
@@ -80,7 +80,7 @@ function loadDeferredData({context}: Route.LoaderArgs) {
   return {};
 }
 
-export default function OrologiCollection() {
+export default function BorseCollection() {
   const {collection, appliedFilters, sortKey, reverse} = useLoaderData<typeof loader>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -418,7 +418,7 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
     amount
     currencyCode
   }
-  fragment ProductItemOrologi on Product {
+  fragment ProductItemBorse on Product {
     id
     handle
     title
@@ -443,7 +443,7 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
 
 const COLLECTION_BY_ID_QUERY = `#graphql
   ${PRODUCT_ITEM_FRAGMENT}
-  query CollectionOrologiById(
+  query CollectionBorseById(
     $id: ID!
     $country: CountryCode
     $language: LanguageCode
@@ -481,7 +481,7 @@ const COLLECTION_BY_ID_QUERY = `#graphql
           }
         }
         nodes {
-          ...ProductItemOrologi
+          ...ProductItemBorse
         }
         pageInfo {
           hasPreviousPage
