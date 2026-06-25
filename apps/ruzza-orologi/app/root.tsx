@@ -6,7 +6,6 @@ import {
   Links,
   Meta,
   Scripts,
-  ScrollRestoration,
   useRouteLoaderData,
 } from 'react-router';
 import type {ShouldRevalidateFunction} from 'react-router';
@@ -122,6 +121,12 @@ export function Layout({children}: LayoutProps) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <script
+          nonce={nonce}
+          dangerouslySetInnerHTML={{
+            __html: `if(history.scrollRestoration)history.scrollRestoration='manual';window.scrollTo(0,0);`,
+          }}
+        />
         <link rel="stylesheet" href={resetStyles}></link>
         <link rel="stylesheet" href={tailwindStyles}></link>
         <link rel="stylesheet" href={appStyles}></link>
@@ -130,7 +135,6 @@ export function Layout({children}: LayoutProps) {
       </head>
       <body>
         {children}
-        <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
       </body>
     </html>
