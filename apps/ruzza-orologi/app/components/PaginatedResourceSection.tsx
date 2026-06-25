@@ -1,0 +1,64 @@
+import * as React from 'react';
+import {Pagination} from '@shopify/hydrogen';
+import type {Connection} from '@shopify/hydrogen';
+
+interface PaginatedResourceSectionProps<NodesType> {
+  connection: Connection<NodesType>;
+  children: (args: {node: NodesType; index: number}) => React.ReactNode;
+  ariaLabel?: string;
+  resourcesClassName?: string;
+}
+
+/**
+ * <PaginatedResourceSection> encapsulates the previous and next pagination behaviors throughout your application.
+ */
+export function PaginatedResourceSection<NodesType>({
+  connection,
+  children,
+  ariaLabel,
+  resourcesClassName,
+}: PaginatedResourceSectionProps<NodesType>) {
+  return (
+    <Pagination connection={connection}>
+      {({nodes, isLoading, PreviousLink, NextLink}) => {
+        const resourcesMarkup = nodes.map((node, index) =>
+          children({node, index}),
+        );
+
+        return (
+          <div>
+            <PreviousLink>
+              {isLoading ? (
+                'Loading...'
+              ) : (
+                <span>
+                  <span aria-hidden="true">↑</span> Load previous
+                </span>
+              )}
+            </PreviousLink>
+            {resourcesClassName ? (
+              <div
+                aria-label={ariaLabel}
+                className={resourcesClassName}
+                role={ariaLabel ? 'region' : undefined}
+              >
+                {resourcesMarkup}
+              </div>
+            ) : (
+              resourcesMarkup
+            )}
+            <NextLink>
+              {isLoading ? (
+                'Loading...'
+              ) : (
+                <span>
+                  Load more <span aria-hidden="true">↓</span>
+                </span>
+              )}
+            </NextLink>
+          </div>
+        );
+      }}
+    </Pagination>
+  );
+}

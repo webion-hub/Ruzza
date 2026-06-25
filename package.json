@@ -1,0 +1,25 @@
+{
+  "name": "ruzza-monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "clean": "turbo clean",
+    "dev:orologi": "turbo dev --filter=ruzza-orologi",
+    "dev:watch": "turbo dev --filter=ruzza-watch",
+    "build:orologi": "turbo build --filter=ruzza-orologi",
+    "build:watch": "turbo build --filter=ruzza-watch"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.0"
+  },
+  "packageManager": "npm@10.8.0",
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}
