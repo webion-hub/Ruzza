@@ -169,7 +169,6 @@ export default function Homepage() {
         imageSrc="/assets/ruzza-lorenzo.png"
         imageAlt="Lorenzo Ruzza"
         titleFont="cormorant"
-        enableParallax={true}
       />
 
       {/* Footer with Newsletter */}

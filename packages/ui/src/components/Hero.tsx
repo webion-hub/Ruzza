@@ -1,7 +1,3 @@
-"use client";
-
-import * as React from "react";
-import { motion } from "motion/react";
 import { cn } from "../lib/utils";
 
 type HeroProps = {
@@ -46,10 +42,7 @@ export function Hero({
     >
       {/* Content */}
       <div className="relative z-[2] flex flex-col items-center">
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.2, 0.7, 0.2, 1] }}
+        <h1
           className={cn(
             fontClass,
             "font-light leading-[0.92] text-[clamp(64px,18vw,380px)] text-balance",
@@ -69,13 +62,10 @@ export function Hero({
               {char}
             </span>
           ))}
-        </motion.h1>
+        </h1>
 
         {showRule && (
-          <motion.div
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ duration: 0.6, delay: 0.3, ease: [0.2, 0.7, 0.2, 1] }}
+          <div
             className={cn(
               "w-[clamp(160px,26vw,420px)] h-px -mt-14 opacity-70 origin-center",
               isDark ? "bg-[rgba(244,241,234,0.6)]" : "bg-[rgba(42,39,34,0.62)]"
@@ -84,10 +74,7 @@ export function Hero({
         )}
 
         {eyebrow && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
+          <div
             className={cn(
               fontClass,
               "font-normal text-[clamp(14px,1.4vw,28px)] tracking-[0.42em] uppercase mt-[clamp(14px,2vw,28px)] pl-[0.42em]",
@@ -95,22 +82,19 @@ export function Hero({
             )}
           >
             {eyebrow}
-          </motion.div>
+          </div>
         )}
       </div>
 
       {/* Scroll Cue */}
       {scrollCueText && (
         <div className="absolute bottom-[clamp(18px,3.4vh,42px)] left-0 right-0 flex justify-center">
-          <motion.button
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.7 }}
+          <button
             type="button"
             aria-label={scrollCueAriaLabel}
             onClick={onScrollCueClick}
             className={cn(
-              "appearance-none bg-transparent border-0 cursor-pointer flex flex-col items-center gap-2.5 font-archivo text-[clamp(9px,0.78vw,12px)] uppercase transition-colors duration-[200ms]",
+              "appearance-none bg-transparent border-0 cursor-pointer flex flex-col items-center gap-2.5 font-archivo text-[clamp(9px,0.78vw,12px)] uppercase transition-colors duration-200",
               isDark
                 ? "text-[rgba(244,241,234,0.62)] hover:text-[#f7f4ee]"
                 : "text-[rgba(42,39,34,0.62)] hover:text-[#2a2722]"
@@ -126,7 +110,7 @@ export function Hero({
               )}
             </span>
             <svg
-              className="w-[22px] h-[22px] animate-[cueBob_2.2s_ease-in-out_infinite] motion-reduce:animate-none"
+              className="w-[22px] h-[22px]"
               viewBox="0 0 24 24"
               fill="none"
             >
@@ -138,16 +122,9 @@ export function Hero({
                 strokeLinejoin="round"
               />
             </svg>
-          </motion.button>
+          </button>
         </div>
       )}
-
-      <style>{`
-        @keyframes cueBob {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(6px); }
-        }
-      `}</style>
     </section>
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { motion, useScroll, useTransform } from "motion/react";
 import { cn } from "../lib/utils";
 
 type CollectionItem = {
@@ -42,15 +41,21 @@ export function Collection({
 }: CollectionProps) {
   const isDark = theme === "dark";
   const sectionRef = React.useRef<HTMLElement>(null);
+  const [isVisible, setIsVisible] = React.useState(false);
 
-  // Track scroll progress for darkening overlay
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start end", "start start"],
-  });
+  React.useEffect(() => {
+    if (!isDark || !sectionRef.current) return;
 
-  // Overlay starts transparent and becomes fully opaque when section reaches top
-  const overlayOpacity = useTransform(scrollYProgress, [0, 1], [0, 0.97]);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsVisible(entry.isIntersecting);
+      },
+      { threshold: 0.1, rootMargin: "-10% 0px -10% 0px" }
+    );
+
+    observer.observe(sectionRef.current);
+    return () => observer.disconnect();
+  }, [isDark]);
 
   const fontClass = {
     "libre-baskerville": "font-['Libre_Baskerville']",
@@ -67,11 +72,13 @@ export function Collection({
         className
       )}
     >
-      {/* Dark overlay - extends upward to cover transition from Hero */}
+      {/* Dark overlay - fades in when section becomes visible */}
       {isDark && (
-        <motion.div
-          className="absolute inset-x-0 -top-[100vh] bottom-0 z-0 pointer-events-none bg-[#0a0a0a]"
-          style={{ opacity: overlayOpacity }}
+        <div
+          className={cn(
+            "absolute inset-x-0 bottom-0 -top-[100vh] z-0 pointer-events-none bg-[#0a0a0a] transition-opacity duration-700 ease-out",
+            isVisible ? "opacity-95" : "opacity-0"
+          )}
         />
       )}
       <div className="relative z-[1] w-[min(1280px,92vw)] mx-auto">
@@ -122,19 +129,10 @@ export function Collection({
         {/* Grid */}
         {items.length > 0 ? (
           <div className="grid grid-cols-12 gap-x-5 gap-y-[50px] max-lg:grid-cols-2 max-sm:grid-cols-1">
-            {items.map((item, index) => (
-              <motion.a
+            {items.map((item) => (
+              <a
                 key={item.id}
                 href={item.href}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                whileHover={{ scale: 1.04 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{
-                  opacity: { duration: 0.5, delay: index * 0.1 },
-                  y: { duration: 0.5, delay: index * 0.1 },
-                  scale: { duration: 0.15 }
-                }}
                 onClick={(e) => {
                   if (onItemClick) {
                     e.preventDefault();
@@ -142,7 +140,7 @@ export function Collection({
                   }
                 }}
                 className={cn(
-                  "col-span-4 max-lg:col-span-1 flex flex-col gap-3.5 no-underline hover:no-underline text-inherit"
+                  "col-span-4 max-lg:col-span-1 flex flex-col gap-3.5 no-underline hover:no-underline text-inherit transition-transform duration-150 hover:scale-[1.02]"
                 )}
               >
                 <div
@@ -182,7 +180,7 @@ export function Collection({
                     {item.category}
                   </div>
                 </div>
-              </motion.a>
+              </a>
             ))}
           </div>
         ) : (

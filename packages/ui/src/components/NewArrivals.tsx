@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { motion } from "motion/react";
 import { cn } from "../lib/utils";
 
 type CarouselItem = {
@@ -229,13 +228,13 @@ export function NewArrivals({
 
               {/* Image */}
               <div className="relative grid place-items-center py-[clamp(8px,2vh,26px)]">
-                <motion.img
+                <img
                   src={item.imageSrc}
                   alt={item.imageAlt}
-                  initial={false}
-                  animate={{ scale: activeIndex === index ? 1 : 0.84, opacity: activeIndex === index ? 1 : 0.92 }}
-                  transition={{ duration: 0.6, ease: [0.2, 0.7, 0.2, 1] }}
-                  className="relative z-[1] h-[clamp(300px,48vh,580px)] w-auto max-w-full object-contain"
+                  className={cn(
+                    "relative z-[1] h-[clamp(300px,48vh,580px)] w-auto max-w-full object-contain transition-all duration-300",
+                    activeIndex === index ? "scale-100 opacity-100" : "scale-[0.92] opacity-90"
+                  )}
                 />
               </div>
 
