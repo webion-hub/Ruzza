@@ -1,12 +1,15 @@
 import {useLoaderData, useSearchParams, useNavigate, Link} from 'react-router';
-import {getPaginationVariables, Image, Money} from '@shopify/hydrogen';
+import {getPaginationVariables, Analytics, Image, Money} from '@shopify/hydrogen';
 import {useVariantUrl} from '~/lib/variants';
-import type {Route} from './+types/collections.all';
-import type {ProductFilter} from '@shopify/hydrogen/storefront-api-types';
+import type {Route} from './+types/collections.orologi';
+import type {Filter, ProductFilter} from '@shopify/hydrogen/storefront-api-types';
 import * as React from 'react';
 
-export const meta: Route.MetaFunction = () => {
-  return [{title: `Ruzza Orologi | Tutti i Modelli`}];
+// Collection ID for Orologi: 387925573878
+const OROLOGI_COLLECTION_ID = 'gid://shopify/Collection/387925573878';
+
+export const meta: Route.MetaFunction = ({data}) => {
+  return [{title: `Ruzza Orologi | ${data?.collection?.title ?? 'Orologi'}`}];
 };
 
 export async function loader(args: Route.LoaderArgs) {
@@ -21,8 +24,8 @@ async function loadCriticalData({context, request}: Route.LoaderArgs) {
 
   // Get filter params from URL
   const filterParams = url.searchParams.getAll('filter');
-  const sortKey = url.searchParams.get('sort') || 'UPDATED_AT';
-  const reverse = url.searchParams.get('reverse') !== 'false';
+  const sortKey = url.searchParams.get('sort') || 'COLLECTION_DEFAULT';
+  const reverse = url.searchParams.get('reverse') === 'true';
 
   // Build filters array for Shopify
   const filters: ProductFilter[] = filterParams.map(param => {
@@ -47,18 +50,26 @@ async function loadCriticalData({context, request}: Route.LoaderArgs) {
     pageBy: 16, // 4x4 grid
   });
 
-  const [{products}] = await Promise.all([
-    storefront.query(CATALOG_QUERY, {
+  const [{collection}] = await Promise.all([
+    storefront.query(COLLECTION_BY_ID_QUERY, {
       variables: {
-        ...paginationVariables,
+        id: OROLOGI_COLLECTION_ID,
+        filters: filters.length > 0 ? filters : undefined,
         sortKey,
         reverse,
+        ...paginationVariables
       },
     }),
   ]);
 
+  if (!collection) {
+    throw new Response(`Collection Orologi not found`, {
+      status: 404,
+    });
+  }
+
   return {
-    products,
+    collection,
     appliedFilters: filterParams,
     sortKey,
     reverse,
@@ -69,10 +80,25 @@ function loadDeferredData({context}: Route.LoaderArgs) {
   return {};
 }
 
-export default function AllProducts() {
-  const {products, appliedFilters, sortKey, reverse} = useLoaderData<typeof loader>();
+export default function OrologiCollection() {
+  const {collection, appliedFilters, sortKey, reverse} = useLoaderData<typeof loader>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+
+  const updateFilter = (filterKey: string, filterValue: string, add: boolean) => {
+    const params = new URLSearchParams(searchParams);
+    const filterString = `${filterKey}:${filterValue}`;
+
+    if (add) {
+      params.append('filter', filterString);
+    } else {
+      const filters = params.getAll('filter').filter(f => f !== filterString);
+      params.delete('filter');
+      filters.forEach(f => params.append('filter', f));
+    }
+
+    navigate(`?${params.toString()}`, {preventScrollReset: true});
+  };
 
   const updateSort = (newSortKey: string, newReverse: boolean) => {
     const params = new URLSearchParams(searchParams);
@@ -85,8 +111,9 @@ export default function AllProducts() {
     navigate('?', {preventScrollReset: true});
   };
 
-  const productNodes = products.nodes;
-  const pageInfo = products.pageInfo;
+  const products = collection.products.nodes;
+  const pageInfo = collection.products.pageInfo;
+  const availableFilters = collection.products.filters || [];
 
   return (
     <div className="min-h-screen bg-[#f7f4ee]">
@@ -94,23 +121,42 @@ export default function AllProducts() {
       <div className="pt-32 pb-12 px-6 lg:px-20">
         <div className="max-w-[1400px] mx-auto">
           <div className="font-archivo text-xs tracking-[0.34em] uppercase text-[#a39c92] mb-4">
-            Catalogo
+            Collezione
           </div>
           <h1 className="font-['Libre_Baskerville'] font-light text-[clamp(34px,5vw,56px)] leading-[1.1] text-[#1a1815]">
-            Tutti i Modelli
+            {collection.title}
           </h1>
-          <p className="mt-4 max-w-[600px] font-archivo text-[15px] leading-[1.7] text-[#6b665d]">
-            Esplora la nostra selezione completa di orologi di lusso, certificati e garantiti.
-          </p>
+          {collection.description && (
+            <p className="mt-4 max-w-[600px] font-archivo text-[15px] leading-[1.7] text-[#6b665d]">
+              {collection.description}
+            </p>
+          )}
         </div>
       </div>
 
-      {/* Sort Bar */}
+      {/* Filters & Sort Bar */}
       <div className="sticky top-0 z-10 bg-[#f7f4ee]/95 backdrop-blur-sm border-y border-[#e5e2dc]">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-20 py-4">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="font-archivo text-sm text-[#6b665d]">
-              {productNodes.length} prodotti
+            {/* Filters */}
+            <div className="flex flex-wrap items-center gap-3">
+              {availableFilters.map((filter: Filter) => (
+                <FilterDropdown
+                  key={filter.id}
+                  filter={filter}
+                  appliedFilters={appliedFilters}
+                  onUpdate={updateFilter}
+                />
+              ))}
+
+              {appliedFilters.length > 0 && (
+                <button
+                  onClick={clearFilters}
+                  className="font-archivo text-xs tracking-[0.1em] uppercase text-[#c0563f] hover:underline"
+                >
+                  Rimuovi filtri
+                </button>
+              )}
             </div>
 
             {/* Sort */}
@@ -126,12 +172,12 @@ export default function AllProducts() {
                 }}
                 className="font-archivo text-sm bg-transparent border border-[#d4d0c8] rounded px-3 py-1.5 text-[#1a1815] cursor-pointer hover:border-[#a39c92] transition-colors"
               >
-                <option value="UPDATED_AT-true">Più recenti</option>
+                <option value="COLLECTION_DEFAULT-false">In evidenza</option>
                 <option value="PRICE-false">Prezzo: crescente</option>
                 <option value="PRICE-true">Prezzo: decrescente</option>
                 <option value="TITLE-false">A-Z</option>
                 <option value="TITLE-true">Z-A</option>
-                <option value="BEST_SELLING-true">Più venduti</option>
+                <option value="CREATED-true">Più recenti</option>
               </select>
             </div>
           </div>
@@ -140,9 +186,9 @@ export default function AllProducts() {
 
       {/* Products Grid - 4x4 */}
       <div className="max-w-[1400px] mx-auto px-6 lg:px-20 py-12">
-        {productNodes.length > 0 ? (
+        {products.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8">
-            {productNodes.map((product: any, index: number) => (
+            {products.map((product: any, index: number) => (
               <ProductCard
                 key={product.id}
                 product={product}
@@ -153,8 +199,14 @@ export default function AllProducts() {
         ) : (
           <div className="py-20 text-center">
             <p className="font-archivo text-lg text-[#6b665d]">
-              Nessun prodotto trovato.
+              Nessun prodotto trovato con i filtri selezionati.
             </p>
+            <button
+              onClick={clearFilters}
+              className="mt-4 font-archivo text-sm tracking-[0.1em] uppercase text-[#1a1815] underline underline-offset-4 hover:text-[#c0563f]"
+            >
+              Rimuovi tutti i filtri
+            </button>
           </div>
         )}
 
@@ -176,6 +228,103 @@ export default function AllProducts() {
           )}
         </div>
       </div>
+
+      <Analytics.CollectionView
+        data={{
+          collection: {
+            id: collection.id,
+            handle: collection.handle,
+          },
+        }}
+      />
+    </div>
+  );
+}
+
+function FilterDropdown({
+  filter,
+  appliedFilters,
+  onUpdate,
+}: {
+  filter: Filter;
+  appliedFilters: string[];
+  onUpdate: (key: string, value: string, add: boolean) => void;
+}) {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const filterKey = filter.type === 'PRICE_RANGE' ? 'price' : filter.id.toLowerCase();
+  const hasActiveFilters = filter.values.some(v =>
+    appliedFilters.includes(`${filterKey}:${v.input}`)
+  );
+
+  return (
+    <div ref={dropdownRef} className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`
+          flex items-center gap-2 font-archivo text-xs tracking-[0.1em] uppercase
+          px-4 py-2 rounded-full border transition-all duration-200
+          ${hasActiveFilters
+            ? 'bg-[#1a1815] text-[#f7f4ee] border-[#1a1815]'
+            : 'bg-white text-[#1a1815] border-[#d4d0c8] hover:border-[#a39c92]'
+          }
+        `}
+      >
+        {filter.label}
+        <svg
+          className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          viewBox="0 0 12 12"
+          fill="none"
+        >
+          <path d="M2.5 4.5 6 8l3.5-3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-2 min-w-[200px] bg-white rounded-lg shadow-lg border border-[#e5e2dc] py-2 z-20">
+          {filter.values.map((value) => {
+            const filterValue = filter.type === 'PRICE_RANGE'
+              ? `${JSON.parse(value.input as string).price.min || 0}-${JSON.parse(value.input as string).price.max || 999999}`
+              : String(value.input).replace(/"/g, '');
+            const isActive = appliedFilters.includes(`${filterKey}:${filterValue}`);
+
+            return (
+              <button
+                key={value.id}
+                onClick={() => {
+                  onUpdate(filterKey, filterValue, !isActive);
+                  setIsOpen(false);
+                }}
+                className={`
+                  w-full text-left px-4 py-2 font-archivo text-sm transition-colors
+                  ${isActive
+                    ? 'bg-[#f7f4ee] text-[#1a1815] font-medium'
+                    : 'text-[#6b665d] hover:bg-[#f7f4ee] hover:text-[#1a1815]'
+                  }
+                `}
+              >
+                <span className="flex items-center justify-between">
+                  {value.label}
+                  {value.count !== undefined && (
+                    <span className="text-xs text-[#a39c92]">({value.count})</span>
+                  )}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -264,12 +413,12 @@ function PaginationLink({
   );
 }
 
-const COLLECTION_ITEM_FRAGMENT = `#graphql
-  fragment MoneyCollectionItem on MoneyV2 {
+const PRODUCT_ITEM_FRAGMENT = `#graphql
+  fragment MoneyProductItem on MoneyV2 {
     amount
     currencyCode
   }
-  fragment CollectionItem on Product {
+  fragment ProductItemOrologi on Product {
     id
     handle
     title
@@ -283,44 +432,64 @@ const COLLECTION_ITEM_FRAGMENT = `#graphql
     }
     priceRange {
       minVariantPrice {
-        ...MoneyCollectionItem
+        ...MoneyProductItem
       }
       maxVariantPrice {
-        ...MoneyCollectionItem
+        ...MoneyProductItem
       }
     }
   }
 ` as const;
 
-const CATALOG_QUERY = `#graphql
-  query Catalog(
+const COLLECTION_BY_ID_QUERY = `#graphql
+  ${PRODUCT_ITEM_FRAGMENT}
+  query CollectionById(
+    $id: ID!
     $country: CountryCode
     $language: LanguageCode
     $first: Int
     $last: Int
     $startCursor: String
     $endCursor: String
-    $sortKey: ProductSortKeys
+    $filters: [ProductFilter!]
+    $sortKey: ProductCollectionSortKeys
     $reverse: Boolean
   ) @inContext(country: $country, language: $language) {
-    products(
-      first: $first,
-      last: $last,
-      before: $startCursor,
-      after: $endCursor,
-      sortKey: $sortKey,
-      reverse: $reverse
-    ) {
-      nodes {
-        ...CollectionItem
-      }
-      pageInfo {
-        hasPreviousPage
-        hasNextPage
-        startCursor
-        endCursor
+    collection(id: $id) {
+      id
+      handle
+      title
+      description
+      products(
+        first: $first,
+        last: $last,
+        before: $startCursor,
+        after: $endCursor,
+        filters: $filters,
+        sortKey: $sortKey,
+        reverse: $reverse
+      ) {
+        filters {
+          id
+          label
+          type
+          values {
+            id
+            label
+            count
+            input
+          }
+        }
+        nodes {
+          ...ProductItemOrologi
+        }
+        pageInfo {
+          hasPreviousPage
+          hasNextPage
+          endCursor
+          startCursor
+        }
       }
     }
   }
-  ${COLLECTION_ITEM_FRAGMENT}
 ` as const;
