@@ -117,9 +117,9 @@ export default function OrologiCollection() {
 
   return (
     <div className="min-h-screen bg-[#f7f4ee]">
-      {/* Header */}
-      <div className="pt-32 pb-12 px-6 lg:px-20">
-        <div className="max-w-[1400px] mx-auto">
+      <div className="max-w-[1400px] mx-auto px-6 lg:px-20">
+        {/* Header */}
+        <div className="pt-32 pb-12">
           <div className="font-archivo text-xs tracking-[0.34em] uppercase text-[#a39c92] mb-4">
             Collezione
           </div>
