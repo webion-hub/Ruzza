@@ -117,17 +117,10 @@ export function Layout({children}: LayoutProps) {
   const nonce = useNonce();
 
   return (
-    <html lang="it" className="loading">
+    <html lang="it">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
-        {/* Prevent FOUC: hide until CSS + JS ready */}
-        <style
-          nonce={nonce}
-          dangerouslySetInnerHTML={{
-            __html: `html.loading{visibility:hidden}html.ready{visibility:visible}`,
-          }}
-        />
         <script
           nonce={nonce}
           dangerouslySetInnerHTML={{
@@ -142,12 +135,6 @@ export function Layout({children}: LayoutProps) {
       </head>
       <body>
         {children}
-        <script
-          nonce={nonce}
-          dangerouslySetInnerHTML={{
-            __html: `document.documentElement.classList.remove('loading');document.documentElement.classList.add('ready');`,
-          }}
-        />
         <Scripts nonce={nonce} />
       </body>
     </html>
