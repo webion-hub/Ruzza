@@ -121,6 +121,13 @@ export function Layout({children}: LayoutProps) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
+        {/* Prevent FOUC: hide body until CSS loads */}
+        <style
+          nonce={nonce}
+          dangerouslySetInnerHTML={{
+            __html: `html{visibility:hidden;opacity:0}`,
+          }}
+        />
         <script
           nonce={nonce}
           dangerouslySetInnerHTML={{
@@ -130,6 +137,13 @@ export function Layout({children}: LayoutProps) {
         <link rel="stylesheet" href={resetStyles}></link>
         <link rel="stylesheet" href={tailwindStyles}></link>
         <link rel="stylesheet" href={appStyles}></link>
+        {/* Show content after CSS loads */}
+        <style
+          nonce={nonce}
+          dangerouslySetInnerHTML={{
+            __html: `html{visibility:visible;opacity:1}`,
+          }}
+        />
         <Meta />
         <Links />
       </head>
