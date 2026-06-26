@@ -117,15 +117,15 @@ export function Layout({children}: LayoutProps) {
   const nonce = useNonce();
 
   return (
-    <html lang="it">
+    <html lang="it" className="loading">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
-        {/* Prevent FOUC: hide body until CSS loads */}
+        {/* Prevent FOUC: hide until CSS + JS ready */}
         <style
           nonce={nonce}
           dangerouslySetInnerHTML={{
-            __html: `html{visibility:hidden;opacity:0}`,
+            __html: `html.loading{visibility:hidden}html.ready{visibility:visible}`,
           }}
         />
         <script
@@ -137,18 +137,17 @@ export function Layout({children}: LayoutProps) {
         <link rel="stylesheet" href={resetStyles}></link>
         <link rel="stylesheet" href={tailwindStyles}></link>
         <link rel="stylesheet" href={appStyles}></link>
-        {/* Show content after CSS loads */}
-        <style
-          nonce={nonce}
-          dangerouslySetInnerHTML={{
-            __html: `html{visibility:visible;opacity:1}`,
-          }}
-        />
         <Meta />
         <Links />
       </head>
       <body>
         {children}
+        <script
+          nonce={nonce}
+          dangerouslySetInnerHTML={{
+            __html: `document.documentElement.classList.remove('loading');document.documentElement.classList.add('ready');`,
+          }}
+        />
         <Scripts nonce={nonce} />
       </body>
     </html>
