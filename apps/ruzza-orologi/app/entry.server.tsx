@@ -37,9 +37,9 @@ export default async function handleRequest(
     },
   );
 
-  if (isbot(request.headers.get('user-agent'))) {
-    await body.allReady;
-  }
+  // Wait for full render to prevent FOUC (Flash of Unstyled Content)
+  // This ensures CSS is loaded before HTML is displayed
+  await body.allReady;
 
   responseHeaders.set('Content-Type', 'text/html');
   responseHeaders.set('Content-Security-Policy', header);
