@@ -45,7 +45,7 @@ export function Hero({
         <h1
           className={cn(
             fontClass,
-            "font-light leading-[0.92] text-[clamp(64px,18vw,380px)] text-balance",
+            "font-light leading-[0.92] text-[clamp(56px,16vw,340px)] text-balance",
             "[font-kerning:none] [font-feature-settings:'kern'_0,'liga'_0]",
             "[text-rendering:geometricPrecision]",
             isDark ? "text-[#f7f4ee]" : "text-[#2a2722]"

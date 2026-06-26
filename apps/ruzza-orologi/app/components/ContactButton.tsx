@@ -1,7 +1,23 @@
-import {useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 
 export function ContactButton() {
   const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Close the menu when clicking outside of it.
+  useEffect(() => {
+    if (!isOpen) return;
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
 
   const contacts = [
     {
@@ -34,7 +50,10 @@ export function ContactButton() {
   ];
 
   return (
-    <div className="fixed bottom-6 right-6 z-[1000] flex flex-col items-end gap-3">
+    <div
+      ref={containerRef}
+      className="fixed bottom-6 right-6 z-[1000] flex flex-col items-end gap-3"
+    >
       {/* Popup Menu */}
       <div
         className={`

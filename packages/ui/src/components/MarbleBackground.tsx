@@ -7,14 +7,16 @@ type MarbleBackgroundProps = {
 
 export function MarbleBackground({ imageSrc, className }: MarbleBackgroundProps) {
   return (
-    <div className={cn("fixed inset-0 z-0 overflow-hidden pointer-events-none", className)}>
-      {/* Static marble background - optimized for performance */}
+    <div className={cn("absolute inset-0 z-0 overflow-hidden pointer-events-none", className)}>
+      {/* Marble image fixed to the viewport (doesn't scroll) but clipped to this
+          container, so it only shows where the container is (hero + collection). */}
       <div
         className="absolute inset-0"
         style={{
           backgroundImage: `url(${imageSrc})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
+          backgroundAttachment: "fixed",
         }}
       />
 

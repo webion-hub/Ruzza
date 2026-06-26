@@ -113,7 +113,7 @@ export default function Product() {
       <nav className="relative sticky top-[var(--header-height,100px)] z-[50] bg-[#f8f6f2] px-[clamp(24px,6vw,96px)] py-4 font-archivo text-[13px] text-[#8c867d]">
         <Link to="/" className="hover:text-[#2a2722] transition-colors">Home</Link>
         <span className="mx-2">/</span>
-        <Link to="/collections/all" className="hover:text-[#2a2722] transition-colors">Orologi</Link>
+        <Link to="/collections/orologi" className="hover:text-[#2a2722] transition-colors">Orologi</Link>
         <span className="mx-2">/</span>
         <span className="text-[#2a2722]">{title}</span>
       </nav>
@@ -182,15 +182,15 @@ export default function Product() {
               {selectedVariant?.compareAtPrice ? (
                 <div className="flex items-center gap-4">
                   <span className="font-archivo text-[clamp(24px,2.5vw,36px)] font-medium text-[#2a2722]">
-                    <Money data={selectedVariant.price} />
+                    <Money as="span" data={selectedVariant.price} />
                   </span>
                   <span className="font-archivo text-[clamp(16px,1.5vw,22px)] text-[#8c867d] line-through">
-                    <Money data={selectedVariant.compareAtPrice} />
+                    <Money as="span" data={selectedVariant.compareAtPrice} />
                   </span>
                 </div>
               ) : selectedVariant?.price ? (
                 <span className="font-archivo text-[clamp(24px,2.5vw,36px)] font-medium text-[#2a2722]">
-                  <Money data={selectedVariant.price} />
+                  <Money as="span" data={selectedVariant.price} />
                 </span>
               ) : null}
             </div>

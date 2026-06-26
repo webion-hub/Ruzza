@@ -18,6 +18,17 @@ import {PageLayout} from './components/PageLayout';
 import type {Route} from './+types/root';
 
 /**
+ * In dev, Vite serves `?url` CSS imports through its HMR runtime: the href
+ * resolves to a JS module that injects the styles *after* hydration, so a
+ * `<link rel="stylesheet">` pointing at it is ignored by the browser and the
+ * first paint is unstyled (FOUC). Appending `?direct` forces Vite to serve the
+ * raw, render-blocking stylesheet. In production the bundled URL is used as-is.
+ */
+function stylesheetHref(href: string): string {
+  return import.meta.env.DEV ? `${href}?direct` : href;
+}
+
+/**
  * This is important to avoid re-fetching root queries on sub-navigations
  */
 export const shouldRevalidate: ShouldRevalidateFunction = ({
@@ -84,7 +95,11 @@ export async function loader(args: Route.LoaderArgs) {
       publicStorefrontId: env.PUBLIC_STOREFRONT_ID,
     }),
     consent: {
-      checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
+      // Fall back to the store domain so Analytics.Provider never throws
+      // "checkoutDomain is required" (which breaks hydration → full client
+      // re-render → flash) when PUBLIC_CHECKOUT_DOMAIN isn't configured.
+      checkoutDomain:
+        env.PUBLIC_CHECKOUT_DOMAIN ?? env.PUBLIC_STORE_DOMAIN,
       storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
       withPrivacyBanner: false,
       country: args.context.storefront.i18n.country,
@@ -148,9 +163,9 @@ export function Layout({children}: LayoutProps) {
             __html: `if(history.scrollRestoration)history.scrollRestoration='manual';window.scrollTo(0,0);`,
           }}
         />
-        <link rel="stylesheet" href={resetStyles}></link>
-        <link rel="stylesheet" href={tailwindStyles}></link>
-        <link rel="stylesheet" href={appStyles}></link>
+        <link rel="stylesheet" href={stylesheetHref(resetStyles)}></link>
+        <link rel="stylesheet" href={stylesheetHref(tailwindStyles)}></link>
+        <link rel="stylesheet" href={stylesheetHref(appStyles)}></link>
         <Meta />
         <Links />
       </head>

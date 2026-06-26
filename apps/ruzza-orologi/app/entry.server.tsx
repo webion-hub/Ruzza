@@ -14,9 +14,15 @@ export default async function handleRequest(
 ) {
   const {nonce, header, NonceProvider} = createContentSecurityPolicy({
     shop: {
-      checkoutDomain: context.env.PUBLIC_CHECKOUT_DOMAIN,
+      checkoutDomain:
+        context.env.PUBLIC_CHECKOUT_DOMAIN ?? context.env.PUBLIC_STORE_DOMAIN,
       storeDomain: context.env.PUBLIC_STORE_DOMAIN,
     },
+    // Allow Google Fonts (stylesheet + font files), otherwise the CSP blocks
+    // them and the page renders without its web fonts. These merge with
+    // Hydrogen's defaults ('self', 'unsafe-inline', cdn.shopify.com, …).
+    styleSrc: ['https://fonts.googleapis.com'],
+    fontSrc: ["'self'", 'data:', 'https://fonts.gstatic.com'],
   });
 
   const body = await renderToReadableStream(

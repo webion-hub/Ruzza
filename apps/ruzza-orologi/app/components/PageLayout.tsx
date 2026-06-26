@@ -56,6 +56,10 @@ interface RuzzaHeaderWrapperProps {
 function RuzzaHeaderWrapper({header, cart, isHomepage}: RuzzaHeaderWrapperProps) {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const {open: openAside} = useAside();
+  const {pathname} = useLocation();
+  const isWatches = pathname.startsWith('/collections/orologi');
+  const isBags = pathname.startsWith('/collections/borse');
+  const isSell = pathname.startsWith('/vendi');
 
   useEffect(() => {
     if (!isHomepage) {
@@ -76,29 +80,36 @@ function RuzzaHeaderWrapper({header, cart, isHomepage}: RuzzaHeaderWrapperProps)
   }, [isHomepage]);
 
   const links = [
-    {label: 'Home', href: '/', isActive: true},
+    {label: 'Home', href: '/', isActive: isHomepage},
+  ];
+
+  // Rendered to the right of the dropdowns (after Luxury Bags).
+  const trailingLinks = [
+    {label: 'Vendi il tuo orologio', href: '/vendi', isActive: isSell},
   ];
 
   const dropdowns = [
     {
       label: 'Orologi',
+      isActive: isWatches,
       items: [
-        {label: 'Rolex', href: '/collections/rolex'},
-        {label: 'Omega', href: '/collections/omega'},
-        {label: 'Patek Philippe', href: '/collections/patek-philippe'},
-        {label: 'Audemars Piguet', href: '/collections/audemars-piguet'},
-        {label: 'Cartier', href: '/collections/cartier'},
-        {label: 'Tutti gli orologi', href: '/collections/all', isViewAll: true},
+        {label: 'Rolex', href: '/collections/orologi?brand=rolex'},
+        {label: 'Omega', href: '/collections/orologi?brand=omega'},
+        {label: 'Patek Philippe', href: '/collections/orologi?brand=patek-philippe'},
+        {label: 'Audemars Piguet', href: '/collections/orologi?brand=audemars-piguet'},
+        {label: 'Cartier', href: '/collections/orologi?brand=cartier'},
+        {label: 'Tutti gli orologi', href: '/collections/orologi', isViewAll: true},
       ],
     },
     {
       label: 'Luxury Bags',
+      isActive: isBags,
       items: [
-        {label: 'Hermes', href: '/collections/hermes'},
-        {label: 'Chanel', href: '/collections/chanel'},
-        {label: 'Louis Vuitton', href: '/collections/louis-vuitton'},
-        {label: 'Gucci', href: '/collections/gucci'},
-        {label: 'Prada', href: '/collections/prada'},
+        {label: 'Hermes', href: '/collections/borse?brand=hermes'},
+        {label: 'Chanel', href: '/collections/borse?brand=chanel'},
+        {label: 'Louis Vuitton', href: '/collections/borse?brand=louis-vuitton'},
+        {label: 'Gucci', href: '/collections/borse?brand=gucci'},
+        {label: 'Prada', href: '/collections/borse?brand=prada'},
         {label: 'Tutte le borse', href: '/collections/borse', isViewAll: true},
       ],
     },
@@ -110,6 +121,7 @@ function RuzzaHeaderWrapper({header, cart, isHomepage}: RuzzaHeaderWrapperProps)
       logoAlt="Ruzza Orologi"
       links={links}
       dropdowns={dropdowns}
+      trailingLinks={trailingLinks}
       telegramHref="https://t.me/ruzzaorologi"
       telegramLabel="Canale Telegram"
       searchPlaceholder="Cerca nel catalogo..."

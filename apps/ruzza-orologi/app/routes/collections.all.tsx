@@ -206,6 +206,8 @@ function ProductCard({
             sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
           />
         )}
+        {/* Subtle bottom-up shadow over the image */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/30 via-black/10 to-transparent" />
       </div>
       <h3 className="font-['Libre_Baskerville'] font-normal text-[clamp(16px,1.2vw,20px)] leading-[1.2] text-[#1a1815] mb-1">
         {product.title}
@@ -216,7 +218,7 @@ function ProductCard({
         </p>
       )}
       <p className="font-archivo text-sm text-[#1a1815]">
-        <Money data={product.priceRange.minVariantPrice} />
+        <Money as="span" data={product.priceRange.minVariantPrice} />
       </p>
     </Link>
   );

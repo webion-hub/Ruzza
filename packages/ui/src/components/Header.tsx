@@ -17,14 +17,17 @@ type NavDropdownItem = {
 
 type NavDropdown = {
   readonly label: string;
+  readonly isActive?: boolean;
   readonly items: readonly NavDropdownItem[];
 };
 
 type HeaderProps = {
   readonly logoSrc: string;
   readonly logoAlt?: string;
+  readonly logoHref?: string;
   readonly links?: readonly NavLink[];
   readonly dropdowns?: readonly NavDropdown[];
+  readonly trailingLinks?: readonly NavLink[];
   readonly telegramHref?: string;
   readonly telegramLabel?: string;
   readonly searchPlaceholder?: string;
@@ -39,8 +42,10 @@ type HeaderProps = {
 export function Header({
   logoSrc,
   logoAlt = "Ruzza",
+  logoHref = "/",
   links = [],
   dropdowns = [],
+  trailingLinks = [],
   telegramHref = "#",
   telegramLabel = "Canale Telegram",
   searchPlaceholder = "Cerca nel catalogo...",
@@ -91,7 +96,7 @@ export function Header({
         )}
       >
         {/* Logo */}
-        <a href="#" className="flex-shrink-0 block leading-none" aria-label={logoAlt}>
+        <a href={logoHref} className="flex-shrink-0 block leading-none" aria-label={logoAlt}>
           <img
             src={logoSrc}
             alt={logoAlt}
@@ -114,7 +119,7 @@ export function Header({
               key={link.href}
               href={link.href}
               className={cn(
-                "font-archivo font-normal text-[clamp(11px,0.92vw,15px)] tracking-[0.03em] px-[18px] py-2 rounded inline-flex items-center gap-[5px] whitespace-nowrap no-underline transition-all duration-[180ms]",
+                "font-archivo font-normal text-[clamp(11px,0.92vw,15px)] tracking-[0.03em] px-[18px] py-2 rounded-full inline-flex items-center gap-[5px] whitespace-nowrap no-underline transition-all duration-[180ms]",
                 isDark ? "text-[#f2efe9] hover:bg-[rgba(255,255,255,0.08)]" : "text-[#2a2722] hover:bg-[rgba(42,39,34,0.06)]",
                 link.isActive && (isDark ? "font-medium bg-[rgba(255,255,255,0.12)]" : "font-medium bg-[rgba(42,39,34,0.08)]")
               )}
@@ -134,8 +139,9 @@ export function Header({
               <button
                 type="button"
                 className={cn(
-                  "font-archivo font-normal text-[clamp(11px,0.92vw,15px)] tracking-[0.03em] px-[18px] py-2 rounded inline-flex items-center gap-[5px] whitespace-nowrap bg-transparent border-0 cursor-pointer transition-all duration-[180ms]",
-                  isDark ? "text-[#f2efe9] hover:bg-[rgba(255,255,255,0.08)]" : "text-[#2a2722] hover:bg-[rgba(42,39,34,0.06)]"
+                  "font-archivo font-normal text-[clamp(11px,0.92vw,15px)] tracking-[0.03em] px-[18px] py-2 rounded-full inline-flex items-center gap-[5px] whitespace-nowrap bg-transparent border-0 cursor-pointer transition-all duration-[180ms]",
+                  isDark ? "text-[#f2efe9] hover:bg-[rgba(255,255,255,0.08)]" : "text-[#2a2722] hover:bg-[rgba(42,39,34,0.06)]",
+                  dropdown.isActive && (isDark ? "font-medium bg-[rgba(255,255,255,0.12)]" : "font-medium bg-[rgba(42,39,34,0.08)]")
                 )}
               >
                 {dropdown.label}
@@ -189,6 +195,20 @@ export function Header({
                 ))}
               </div>
             </div>
+          ))}
+
+          {trailingLinks.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              className={cn(
+                "font-archivo font-normal text-[clamp(11px,0.92vw,15px)] tracking-[0.03em] px-[18px] py-2 rounded-full inline-flex items-center gap-[5px] whitespace-nowrap no-underline transition-all duration-[180ms]",
+                isDark ? "text-[#f2efe9] hover:bg-[rgba(255,255,255,0.08)]" : "text-[#2a2722] hover:bg-[rgba(42,39,34,0.06)]",
+                link.isActive && (isDark ? "font-medium bg-[rgba(255,255,255,0.12)]" : "font-medium bg-[rgba(42,39,34,0.08)]")
+              )}
+            >
+              {link.label}
+            </a>
           ))}
         </nav>
 

@@ -41,7 +41,7 @@ export function Footer({
   return (
     <footer
       className={cn(
-        "relative z-[1] bg-[#0a0a0a] text-[#f7f4ee] pt-[250px] pb-[110px] px-20 font-archivo max-lg:pt-[200px] max-lg:pb-[72px] max-lg:px-[clamp(22px,6vw,40px)]",
+        "relative z-[1] overflow-hidden bg-[#0a0a0a] text-[#f7f4ee] pt-[250px] pb-[110px] px-20 font-archivo max-lg:pt-[200px] max-lg:pb-[72px] max-lg:px-[clamp(22px,6vw,40px)]",
         className
       )}
     >
@@ -98,7 +98,7 @@ export function Footer({
           <div
             className={cn(
               fontClass,
-              "w-full mt-16 -mb-[2vw] font-normal leading-[0.82] select-none pointer-events-none flex justify-between",
+              "w-full mt-16 font-normal leading-[0.82] select-none pointer-events-none flex justify-between",
               "bg-gradient-to-b from-[rgba(247,244,238,0.16)] via-[rgba(247,244,238,0.04)] to-transparent bg-clip-text text-transparent"
             )}
             style={{ fontSize: "clamp(90px, 25vw, 450px)" }}

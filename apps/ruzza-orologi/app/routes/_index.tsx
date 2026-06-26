@@ -85,8 +85,10 @@ export default function Homepage() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a]">
-      {/* Fixed Marble Background */}
-      <MarbleBackground imageSrc="/assets/marble-bg-4k.png" />
+      {/* Marble zone — the marble shows ONLY behind the hero + collection, stays
+          fixed to the viewport, and never bleeds past this section. */}
+      <div className="relative">
+        <MarbleBackground imageSrc="/assets/marble-bg-4k.png" />
 
       {/* Hero Section */}
       <Hero
@@ -106,11 +108,12 @@ export default function Homepage() {
           eyebrow="Collezione"
           title="Tutti i modelli"
           ctaLabel="Visualizza tutto"
-          ctaHref="/collections/all"
+          ctaHref="/collections/orologi"
           items={collectionItems}
           titleFont="libre-baskerville"
           theme="dark"
         />
+      </div>
       </div>
 
       {/* New Arrivals Carousel */}
@@ -135,7 +138,7 @@ export default function Homepage() {
                 title="Appena usciti"
                 subtitle="La nuova selezione Ruzza Milano: pezzi unici e certificati. Il talismano del tempo, in cinque nuove anime."
                 ctaLabel="VEDI TUTTI I MODELLI"
-                ctaHref="/collections/all"
+                ctaHref="/collections/orologi"
                 items={items}
                 discoverLabel="Discover"
                 titleFont="libre-baskerville"

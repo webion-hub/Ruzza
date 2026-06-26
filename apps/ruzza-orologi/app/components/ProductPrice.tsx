@@ -13,7 +13,7 @@ export function ProductPrice({price, compareAtPrice}: ProductPriceProps) {
         <div className="product-price-on-sale">
           {price ? <Money data={price} /> : null}
           <s>
-            <Money data={compareAtPrice} />
+            <Money as="span" data={compareAtPrice} />
           </s>
         </div>
       ) : price ? (

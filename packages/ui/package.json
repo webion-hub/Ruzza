@@ -7,8 +7,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./components/*": "./src/components/*",
-    "./lib/*": "./src/lib/*",
-    "./globals.css": "./src/globals.css"
+    "./lib/*": "./src/lib/*"
   },
   "scripts": {
     "lint": "eslint .",

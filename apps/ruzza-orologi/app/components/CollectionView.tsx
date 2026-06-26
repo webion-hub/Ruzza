@@ -1,132 +1,108 @@
-import {redirect, useLoaderData, useSearchParams, useNavigate} from 'react-router';
-import {getPaginationVariables, Analytics, Image, Money} from '@shopify/hydrogen';
-import {redirectIfHandleIsLocalized} from '~/lib/redirect';
+import {Link, useNavigate, useSearchParams} from 'react-router';
+import {Analytics, Image, Money} from '@shopify/hydrogen';
+import * as React from 'react';
 import {useVariantUrl} from '~/lib/variants';
-import {Link} from 'react-router';
-import type {Route} from './+types/collections.$handle';
-import type {Filter, ProductFilter} from '@shopify/hydrogen/storefront-api-types';
+import type {BrandCount} from '~/lib/watchBrands';
+import type {Filter} from '@shopify/hydrogen/storefront-api-types';
 
-export const meta: Route.MetaFunction = ({data}) => {
-  return [{title: `Ruzza Orologi | ${data?.collection.title ?? 'Collezione'}`}];
-};
+/**
+ * Shared, Tailwind-based collection page used by the watches and bags routes
+ * (and reusable by any collection). Filters are stored in the URL as raw
+ * Shopify `ProductFilter` JSON strings under repeated `?filter=` params, so the
+ * loader can `JSON.parse` them and hand them straight to the Storefront API.
+ *
+ * Availability counts come for free from the `filters` facet returned by the
+ * products connection — including the "vendor" (brand) facet that powers the
+ * brand selector.
+ */
 
-export async function loader(args: Route.LoaderArgs) {
-  const deferredData = loadDeferredData(args);
-  const criticalData = await loadCriticalData(args);
-  return {...deferredData, ...criticalData};
+export const SORT_OPTIONS = [
+  {value: 'COLLECTION_DEFAULT-false', label: 'In evidenza'},
+  {value: 'PRICE-false', label: 'Prezzo: crescente'},
+  {value: 'PRICE-true', label: 'Prezzo: decrescente'},
+  {value: 'TITLE-false', label: 'A-Z'},
+  {value: 'TITLE-true', label: 'Z-A'},
+  {value: 'CREATED-true', label: 'Più recenti'},
+] as const;
+
+interface CollectionViewProps {
+  collection: any;
+  /** Raw Shopify filter JSON strings currently applied (from `?filter=`). */
+  appliedFilters: string[];
+  sortKey: string;
+  reverse: boolean;
+  /** Brand selector entries (with availability counts). Omit to hide it. */
+  brands?: BrandCount[];
+  /** Slug of the currently selected brand, if any (from `?brand=`). */
+  activeBrandSlug?: string | null;
+  eyebrow?: string;
 }
 
-async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
-  const {handle} = params;
-  const {storefront} = context;
-  const url = new URL(request.url);
-
-  // Get filter params from URL
-  const filterParams = url.searchParams.getAll('filter');
-  const sortKey = url.searchParams.get('sort') || 'COLLECTION_DEFAULT';
-  const reverse = url.searchParams.get('reverse') === 'true';
-
-  // Build filters array for Shopify
-  const filters: ProductFilter[] = filterParams.map(param => {
-    const [key, value] = param.split(':');
-    if (key === 'price') {
-      const [min, max] = value.split('-');
-      return {price: {min: parseFloat(min) || 0, max: parseFloat(max) || 999999}};
-    }
-    if (key === 'productType') {
-      return {productType: value};
-    }
-    if (key === 'vendor') {
-      return {productVendor: value};
-    }
-    if (key === 'available') {
-      return {available: value === 'true'};
-    }
-    return {};
-  }).filter(f => Object.keys(f).length > 0);
-
-  const paginationVariables = getPaginationVariables(request, {
-    pageBy: 16, // 4x4 grid
-  });
-
-  if (!handle) {
-    throw redirect('/collections');
-  }
-
-  const [{collection}] = await Promise.all([
-    storefront.query(COLLECTION_QUERY, {
-      variables: {
-        handle,
-        filters: filters.length > 0 ? filters : undefined,
-        sortKey,
-        reverse,
-        ...paginationVariables
-      },
-    }),
-  ]);
-
-  if (!collection) {
-    throw new Response(`Collection ${handle} not found`, {
-      status: 404,
-    });
-  }
-
-  redirectIfHandleIsLocalized(request, {handle, data: collection});
-
-  return {
-    collection,
-    appliedFilters: filterParams,
-    sortKey,
-    reverse,
-  };
-}
-
-function loadDeferredData({context}: Route.LoaderArgs) {
-  return {};
-}
-
-export default function Collection() {
-  const {collection, appliedFilters, sortKey, reverse} = useLoaderData<typeof loader>();
+export function CollectionView({
+  collection,
+  appliedFilters,
+  sortKey,
+  reverse,
+  brands,
+  activeBrandSlug = null,
+  eyebrow = 'Collezione',
+}: CollectionViewProps) {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  const updateFilter = (filterKey: string, filterValue: string, add: boolean) => {
-    const params = new URLSearchParams(searchParams);
-    const filterString = `${filterKey}:${filterValue}`;
-
-    if (add) {
-      params.append('filter', filterString);
-    } else {
-      const filters = params.getAll('filter').filter(f => f !== filterString);
-      params.delete('filter');
-      filters.forEach(f => params.append('filter', f));
-    }
-
-    navigate(`?${params.toString()}`, {preventScrollReset: true});
-  };
-
-  const updateSort = (newSortKey: string, newReverse: boolean) => {
-    const params = new URLSearchParams(searchParams);
-    params.set('sort', newSortKey);
-    params.set('reverse', String(newReverse));
-    navigate(`?${params.toString()}`, {preventScrollReset: true});
-  };
-
-  const clearFilters = () => {
-    navigate('?', {preventScrollReset: true});
-  };
-
   const products = collection.products.nodes;
   const pageInfo = collection.products.pageInfo;
-  const availableFilters = collection.products.filters || [];
+  const otherFilters: Filter[] = collection.products.filters || [];
+
+  /** Select/deselect a brand. Brand changes swap the queried collection, so
+   * collection-specific facet filters are cleared. */
+  const selectBrand = (slug: string) => {
+    const params = new URLSearchParams(searchParams);
+    if (params.get('brand') === slug) {
+      params.delete('brand');
+    } else {
+      params.set('brand', slug);
+    }
+    params.delete('filter');
+    params.delete('cursor');
+    params.delete('direction');
+    navigate(`?${params.toString()}`, {preventScrollReset: true});
+  };
+
+  /** Add or remove a raw filter-input JSON string, resetting pagination. */
+  const toggleFilter = (input: string) => {
+    const params = new URLSearchParams(searchParams);
+    const current = params.getAll('filter');
+    params.delete('filter');
+    const next = current.includes(input)
+      ? current.filter((f) => f !== input)
+      : [...current, input];
+    next.forEach((f) => params.append('filter', f));
+    // back to the first page whenever the result set changes
+    params.delete('cursor');
+    params.delete('direction');
+    navigate(`?${params.toString()}`, {preventScrollReset: true});
+  };
+
+  const updateSort = (value: string) => {
+    const [key, rev] = value.split('-');
+    const params = new URLSearchParams(searchParams);
+    params.set('sort', key);
+    params.set('reverse', rev);
+    params.delete('cursor');
+    params.delete('direction');
+    navigate(`?${params.toString()}`, {preventScrollReset: true});
+  };
+
+  const clearFilters = () => navigate('?', {preventScrollReset: true});
 
   return (
     <div className="min-h-screen bg-[#f7f4ee]">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-20">
         {/* Header */}
-        <div className="pt-32 pb-12">
+        <div className="pt-32 pb-10">
           <div className="font-archivo text-xs tracking-[0.34em] uppercase text-[#a39c92] mb-4">
-            Collezione
+            {eyebrow}
           </div>
           <h1 className="font-['Libre_Baskerville'] font-light text-[clamp(34px,5vw,56px)] leading-[1.1] text-[#1a1815]">
             {collection.title}
@@ -139,18 +115,26 @@ export default function Collection() {
         </div>
       </div>
 
-      {/* Filters & Sort Bar */}
+      {/* Brand selector */}
+      {brands && brands.length > 0 && (
+        <BrandBar
+          brands={brands}
+          activeBrandSlug={activeBrandSlug}
+          onSelect={selectBrand}
+        />
+      )}
+
+      {/* Filters & sort bar */}
       <div className="sticky top-0 z-10 bg-[#f7f4ee]/95 backdrop-blur-sm border-y border-[#e5e2dc]">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-20 py-4">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            {/* Filters */}
             <div className="flex flex-wrap items-center gap-3">
-              {availableFilters.map((filter: Filter) => (
+              {otherFilters.map((filter) => (
                 <FilterDropdown
                   key={filter.id}
                   filter={filter}
                   appliedFilters={appliedFilters}
-                  onUpdate={updateFilter}
+                  onToggle={toggleFilter}
                 />
               ))}
 
@@ -164,36 +148,31 @@ export default function Collection() {
               )}
             </div>
 
-            {/* Sort */}
             <div className="flex items-center gap-2">
               <span className="font-archivo text-xs tracking-[0.1em] uppercase text-[#a39c92]">
                 Ordina:
               </span>
               <select
                 value={`${sortKey}-${reverse}`}
-                onChange={(e) => {
-                  const [key, rev] = e.target.value.split('-');
-                  updateSort(key, rev === 'true');
-                }}
+                onChange={(e) => updateSort(e.target.value)}
                 className="font-archivo text-sm bg-transparent border border-[#d4d0c8] rounded px-3 py-1.5 text-[#1a1815] cursor-pointer hover:border-[#a39c92] transition-colors"
               >
-                <option value="COLLECTION_DEFAULT-false">In evidenza</option>
-                <option value="PRICE-false">Prezzo: crescente</option>
-                <option value="PRICE-true">Prezzo: decrescente</option>
-                <option value="TITLE-false">A-Z</option>
-                <option value="TITLE-true">Z-A</option>
-                <option value="CREATED-true">Più recenti</option>
+                {SORT_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Products Grid - 4x4 */}
+      {/* Grid */}
       <div className="max-w-[1400px] mx-auto px-6 lg:px-20 py-12">
         {products.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8">
-            {products.map((product, index) => (
+            {products.map((product: any, index: number) => (
               <ProductCard
                 key={product.id}
                 product={product}
@@ -215,7 +194,6 @@ export default function Collection() {
           </div>
         )}
 
-        {/* Pagination */}
         <div className="mt-16 flex justify-center gap-4">
           {pageInfo.hasPreviousPage && (
             <PaginationLink
@@ -235,13 +213,51 @@ export default function Collection() {
       </div>
 
       <Analytics.CollectionView
-        data={{
-          collection: {
-            id: collection.id,
-            handle: collection.handle,
-          },
-        }}
+        data={{collection: {id: collection.id, handle: collection.handle}}}
       />
+    </div>
+  );
+}
+
+function BrandBar({
+  brands,
+  activeBrandSlug,
+  onSelect,
+}: {
+  brands: BrandCount[];
+  activeBrandSlug: string | null;
+  onSelect: (slug: string) => void;
+}) {
+  return (
+    <div className="border-t border-[#e5e2dc] bg-[#f7f4ee]">
+      <div className="max-w-[1400px] mx-auto px-6 lg:px-20 py-5">
+        <div className="font-archivo text-[11px] tracking-[0.2em] uppercase text-[#a39c92] mb-3">
+          Marca
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {brands.map((brand) => {
+            const isActive = brand.slug === activeBrandSlug;
+            return (
+              <button
+                key={brand.slug}
+                onClick={() => onSelect(brand.slug)}
+                aria-pressed={isActive}
+                className={`inline-flex items-center gap-2 font-archivo text-xs tracking-[0.06em] px-4 py-2 rounded-full border transition-all duration-200 ${
+                  isActive
+                    ? 'bg-[#1a1815] text-[#f7f4ee] border-[#1a1815]'
+                    : 'bg-white text-[#1a1815] border-[#d4d0c8] hover:border-[#a39c92]'
+                }`}
+              >
+                {brand.label}
+                <span className={isActive ? 'text-[#f7f4ee]/70' : 'text-[#a39c92]'}>
+                  {brand.count}
+                  {brand.capped ? '+' : ''}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
@@ -249,19 +265,21 @@ export default function Collection() {
 function FilterDropdown({
   filter,
   appliedFilters,
-  onUpdate,
+  onToggle,
 }: {
   filter: Filter;
   appliedFilters: string[];
-  onUpdate: (key: string, value: string, add: boolean) => void;
+  onToggle: (input: string) => void;
 }) {
   const [isOpen, setIsOpen] = React.useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
-  // Close on click outside
   React.useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     }
@@ -269,23 +287,19 @@ function FilterDropdown({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const filterKey = filter.type === 'PRICE_RANGE' ? 'price' : filter.id.toLowerCase();
-  const hasActiveFilters = filter.values.some(v =>
-    appliedFilters.includes(`${filterKey}:${v.input}`)
+  const hasActiveFilters = filter.values.some((v) =>
+    appliedFilters.includes(String(v.input)),
   );
 
   return (
     <div ref={dropdownRef} className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`
-          flex items-center gap-2 font-archivo text-xs tracking-[0.1em] uppercase
-          px-4 py-2 rounded-full border transition-all duration-200
-          ${hasActiveFilters
+        className={`flex items-center gap-2 font-archivo text-xs tracking-[0.1em] uppercase px-4 py-2 rounded-full border transition-all duration-200 ${
+          hasActiveFilters
             ? 'bg-[#1a1815] text-[#f7f4ee] border-[#1a1815]'
             : 'bg-white text-[#1a1815] border-[#d4d0c8] hover:border-[#a39c92]'
-          }
-        `}
+        }`}
       >
         {filter.label}
         <svg
@@ -293,37 +307,40 @@ function FilterDropdown({
           viewBox="0 0 12 12"
           fill="none"
         >
-          <path d="M2.5 4.5 6 8l3.5-3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+          <path
+            d="M2.5 4.5 6 8l3.5-3.5"
+            stroke="currentColor"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 min-w-[200px] bg-white rounded-lg shadow-lg border border-[#e5e2dc] py-2 z-20">
+        <div className="absolute top-full left-0 mt-2 min-w-[200px] max-h-[320px] overflow-y-auto bg-white rounded-lg shadow-lg border border-[#e5e2dc] py-2 z-20">
           {filter.values.map((value) => {
-            const filterValue = filter.type === 'PRICE_RANGE'
-              ? `${JSON.parse(value.input as string).price.min || 0}-${JSON.parse(value.input as string).price.max || 999999}`
-              : String(value.input).replace(/"/g, '');
-            const isActive = appliedFilters.includes(`${filterKey}:${filterValue}`);
-
+            const input = String(value.input);
+            const isActive = appliedFilters.includes(input);
             return (
               <button
                 key={value.id}
                 onClick={() => {
-                  onUpdate(filterKey, filterValue, !isActive);
+                  onToggle(input);
                   setIsOpen(false);
                 }}
-                className={`
-                  w-full text-left px-4 py-2 font-archivo text-sm transition-colors
-                  ${isActive
+                className={`w-full text-left px-4 py-2 font-archivo text-sm transition-colors ${
+                  isActive
                     ? 'bg-[#f7f4ee] text-[#1a1815] font-medium'
                     : 'text-[#6b665d] hover:bg-[#f7f4ee] hover:text-[#1a1815]'
-                  }
-                `}
+                }`}
               >
-                <span className="flex items-center justify-between">
+                <span className="flex items-center justify-between gap-4">
                   {value.label}
-                  {value.count !== undefined && (
-                    <span className="text-xs text-[#a39c92]">({value.count})</span>
+                  {typeof value.count === 'number' && (
+                    <span className="text-xs text-[#a39c92]">
+                      ({value.count})
+                    </span>
                   )}
                 </span>
               </button>
@@ -334,8 +351,6 @@ function FilterDropdown({
     </div>
   );
 }
-
-import * as React from 'react';
 
 function ProductCard({
   product,
@@ -348,11 +363,7 @@ function ProductCard({
   const image = product.featuredImage;
 
   return (
-    <Link
-      to={variantUrl}
-      prefetch="intent"
-      className="group flex flex-col"
-    >
+    <Link to={variantUrl} prefetch="intent" className="group flex flex-col">
       <div className="relative aspect-square overflow-hidden bg-[#eae7e1] rounded-sm mb-4">
         {image && (
           <Image
@@ -410,25 +421,38 @@ function PaginationLink({
     >
       {isPrevious && (
         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
-          <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
+          <path
+            d="M19 12H5M12 19l-7-7 7-7"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
       )}
       {isPrevious ? 'Precedente' : 'Successivo'}
       {!isPrevious && (
         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
-          <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
+          <path
+            d="M5 12h14M12 5l7 7-7 7"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
       )}
     </Link>
   );
 }
 
-const PRODUCT_ITEM_FRAGMENT = `#graphql
-  fragment MoneyProductItem on MoneyV2 {
+/** Collection-by-ID query with filters, sort, pagination and facet counts. */
+export const COLLECTION_BY_ID_QUERY = `#graphql
+  fragment MoneyCollectionView on MoneyV2 {
     amount
     currencyCode
   }
-  fragment ProductItem on Product {
+  fragment ProductCardCollectionView on Product {
     id
     handle
     title
@@ -442,19 +466,12 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
     }
     priceRange {
       minVariantPrice {
-        ...MoneyProductItem
-      }
-      maxVariantPrice {
-        ...MoneyProductItem
+        ...MoneyCollectionView
       }
     }
   }
-` as const;
-
-const COLLECTION_QUERY = `#graphql
-  ${PRODUCT_ITEM_FRAGMENT}
-  query Collection(
-    $handle: String!
+  query CollectionById(
+    $id: ID!
     $country: CountryCode
     $language: LanguageCode
     $first: Int
@@ -465,18 +482,18 @@ const COLLECTION_QUERY = `#graphql
     $sortKey: ProductCollectionSortKeys
     $reverse: Boolean
   ) @inContext(country: $country, language: $language) {
-    collection(handle: $handle) {
+    collection(id: $id) {
       id
       handle
       title
       description
       products(
-        first: $first,
-        last: $last,
-        before: $startCursor,
-        after: $endCursor,
-        filters: $filters,
-        sortKey: $sortKey,
+        first: $first
+        last: $last
+        before: $startCursor
+        after: $endCursor
+        filters: $filters
+        sortKey: $sortKey
         reverse: $reverse
       ) {
         filters {
@@ -491,13 +508,13 @@ const COLLECTION_QUERY = `#graphql
           }
         }
         nodes {
-          ...ProductItem
+          ...ProductCardCollectionView
         }
         pageInfo {
           hasPreviousPage
           hasNextPage
-          endCursor
           startCursor
+          endCursor
         }
       }
     }
