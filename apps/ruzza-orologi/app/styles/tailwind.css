@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300&family=Libre+Baskerville:wght@400;700&display=swap');
+/* Fonts are preloaded in root.tsx links() for better performance */
 
 @tailwind base;
 @tailwind components;

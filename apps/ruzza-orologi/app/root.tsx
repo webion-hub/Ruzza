@@ -36,6 +36,27 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 
 export function links() {
   return [
+    // Preconnect to Google Fonts for faster font loading
+    {
+      rel: 'preconnect',
+      href: 'https://fonts.googleapis.com',
+    },
+    {
+      rel: 'preconnect',
+      href: 'https://fonts.gstatic.com',
+      crossOrigin: 'anonymous',
+    },
+    // Preload Google Fonts CSS to prevent FOUC
+    {
+      rel: 'preload',
+      as: 'style',
+      href: 'https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300&family=Libre+Baskerville:wght@400;700&display=swap',
+    },
+    // Load Google Fonts CSS
+    {
+      rel: 'stylesheet',
+      href: 'https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300&family=Libre+Baskerville:wght@400;700&display=swap',
+    },
     {
       rel: 'preconnect',
       href: 'https://cdn.shopify.com',
