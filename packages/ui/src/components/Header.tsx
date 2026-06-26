@@ -158,15 +158,15 @@ export function Header({
               </button>
 
               <div
+                style={{
+                  display: openDropdown === dropdown.label ? 'flex' : 'none',
+                }}
                 className={cn(
-                  "absolute top-full left-1/2 -translate-x-1/2 mt-2 min-w-[220px] flex flex-col p-2 rounded-[14px] backdrop-blur-[24px] saturate-150 shadow-[0_18px_50px_-16px_rgba(0,0,0,0.4)] transition-all duration-200",
+                  "absolute top-full left-1/2 -translate-x-1/2 mt-2 min-w-[220px] flex-col p-2 rounded-[14px] backdrop-blur-[24px] saturate-150 shadow-[0_18px_50px_-16px_rgba(0,0,0,0.4)]",
                   "before:content-[''] before:absolute before:bottom-full before:left-0 before:right-0 before:h-[14px]",
                   isDark
                     ? "bg-[rgba(28,27,30,0.72)] border border-[rgba(255,255,255,0.14)]"
-                    : "bg-[rgba(252,251,248,0.72)] border border-[rgba(255,255,255,0.55)]",
-                  openDropdown === dropdown.label
-                    ? "opacity-100 translate-y-0 pointer-events-auto"
-                    : "opacity-0 translate-y-1.5 pointer-events-none"
+                    : "bg-[rgba(252,251,248,0.72)] border border-[rgba(255,255,255,0.55)]"
                 )}
               >
                 {dropdown.items.map((item) => (
