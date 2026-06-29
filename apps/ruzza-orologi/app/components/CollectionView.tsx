@@ -2,7 +2,7 @@ import {Link, useNavigate, useSearchParams} from 'react-router';
 import {Analytics, Image, Money} from '@shopify/hydrogen';
 import * as React from 'react';
 import {useVariantUrl} from '~/lib/variants';
-import type {BrandCount} from '~/lib/watchBrands';
+import type {BrandCount} from '~/lib/brands';
 import type {Filter} from '@shopify/hydrogen/storefront-api-types';
 
 /**
@@ -376,6 +376,11 @@ function ProductCard({
         )}
         {/* Subtle bottom-up shadow over the image */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/30 via-black/10 to-transparent" />
+        {!product.availableForSale && (
+          <span className="pointer-events-none absolute left-3 top-3 z-10 rounded-full bg-[#1a1815] px-3 py-1 font-archivo text-[10px] font-medium tracking-[0.14em] uppercase text-[#f7f4ee]">
+            Esaurito
+          </span>
+        )}
       </div>
       <h3 className="font-['Libre_Baskerville'] font-normal text-[clamp(16px,1.2vw,20px)] leading-[1.2] text-[#1a1815] mb-1">
         {product.title}
@@ -457,6 +462,7 @@ export const COLLECTION_BY_ID_QUERY = `#graphql
     handle
     title
     vendor
+    availableForSale
     featuredImage {
       id
       altText

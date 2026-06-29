@@ -2,10 +2,10 @@ import {redirect} from 'react-router';
 
 /**
  * @param {Request} request
- * @param {...Array<{
+ * @param {...{
  *     handle: string;
  *     data: {handle: string} & unknown;
- *   }>} [localizedResources]
+ *   }} localizedResources
  */
 export function redirectIfHandleIsLocalized(request, ...localizedResources) {
   const url = new URL(request.url);

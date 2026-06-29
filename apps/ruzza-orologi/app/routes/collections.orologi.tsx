@@ -8,7 +8,10 @@ import {
   parseBrandCounts,
 } from '~/lib/brands';
 import type {Route} from './+types/collections.orologi';
-import type {ProductFilter} from '@shopify/hydrogen/storefront-api-types';
+import type {
+  ProductCollectionSortKeys,
+  ProductFilter,
+} from '@shopify/hydrogen/storefront-api-types';
 
 const OROLOGI_COLLECTION_ID = 'gid://shopify/Collection/387924230390';
 
@@ -42,7 +45,8 @@ export async function loader({context, request}: Route.LoaderArgs) {
     })
     .filter((f): f is ProductFilter => f !== null);
 
-  const sortKey = url.searchParams.get('sort') || 'COLLECTION_DEFAULT';
+  const sortKey = (url.searchParams.get('sort') ||
+    'COLLECTION_DEFAULT') as ProductCollectionSortKeys;
   const reverse = url.searchParams.get('reverse') === 'true';
   const paginationVariables = getPaginationVariables(request, {pageBy: 16});
 
