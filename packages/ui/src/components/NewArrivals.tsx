@@ -69,15 +69,14 @@ export function NewArrivals({
     }
   };
 
-  const handleScroll = () => {
-    if (!trackRef.current) return;
+  const getNearestIndex = () => {
     const track = trackRef.current;
+    if (!track) return activeIndex;
     const slides = Array.from(track.querySelectorAll(".slide")) as HTMLElement[];
     const center = track.scrollLeft + track.clientWidth / 2;
 
     let bestIndex = 0;
     let bestDist = Infinity;
-
     slides.forEach((slide, i) => {
       const slideCenter = slide.offsetLeft + slide.offsetWidth / 2;
       const dist = Math.abs(slideCenter - center);
@@ -86,8 +85,63 @@ export function NewArrivals({
         bestIndex = i;
       }
     });
+    return bestIndex;
+  };
 
-    setActiveIndex(bestIndex);
+  const handleScroll = () => {
+    setActiveIndex(getNearestIndex());
+  };
+
+  // Drag-to-scroll with the mouse (or pen). Touch keeps native horizontal
+  // scrolling, so we bail out for it. Snap is disabled while dragging and
+  // re-enabled on release, which then settles on the nearest slide.
+  const isDraggingRef = React.useRef(false);
+  const dragStartXRef = React.useRef(0);
+  const dragStartScrollRef = React.useRef(0);
+  const draggedRef = React.useRef(false);
+
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === "touch" || e.button !== 0) return;
+    const track = trackRef.current;
+    if (!track) return;
+    e.preventDefault(); // avoid text/image selection while dragging
+    isDraggingRef.current = true;
+    draggedRef.current = false;
+    dragStartXRef.current = e.clientX;
+    dragStartScrollRef.current = track.scrollLeft;
+    track.style.scrollSnapType = "none";
+    track.setPointerCapture(e.pointerId);
+  };
+
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current) return;
+    const track = trackRef.current;
+    if (!track) return;
+    const dx = e.clientX - dragStartXRef.current;
+    if (Math.abs(dx) > 4) draggedRef.current = true;
+    track.scrollLeft = dragStartScrollRef.current - dx;
+  };
+
+  const endDrag = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+    const track = trackRef.current;
+    if (track) {
+      track.style.scrollSnapType = "";
+      if (track.hasPointerCapture(e.pointerId)) {
+        track.releasePointerCapture(e.pointerId);
+      }
+    }
+    goTo(getNearestIndex());
+  };
+
+  // Swallow the click that fires after a drag, so dragging never triggers a link.
+  const onClickCapture = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (draggedRef.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      draggedRef.current = false;
+    }
   };
 
   return (
@@ -188,7 +242,12 @@ export function NewArrivals({
         <div
           ref={trackRef}
           onScroll={handleScroll}
-          className="flex items-center gap-[clamp(20px,3vw,56px)] w-full overflow-x-auto snap-x snap-mandatory [-webkit-overflow-scrolling:touch] px-[max(6vw,calc(50vw-min(560px,44vw)))] py-[clamp(10px,2vh,28px)] scrollbar-hide cursor-grab active:cursor-grabbing"
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={endDrag}
+          onPointerCancel={endDrag}
+          onClickCapture={onClickCapture}
+          className="flex items-center gap-[clamp(20px,3vw,56px)] w-full overflow-x-auto snap-x snap-mandatory [-webkit-overflow-scrolling:touch] px-[max(6vw,calc(50vw-min(560px,44vw)))] py-[clamp(10px,2vh,28px)] scrollbar-hide select-none cursor-grab active:cursor-grabbing"
         >
           {items.map((item, index) => (
             <article
@@ -231,6 +290,7 @@ export function NewArrivals({
                 <img
                   src={item.imageSrc}
                   alt={item.imageAlt}
+                  draggable={false}
                   className={cn(
                     "relative z-[1] h-[clamp(300px,48vh,580px)] w-auto max-w-full object-contain transition-all duration-300",
                     activeIndex === index ? "scale-100 opacity-100" : "scale-[0.92] opacity-90"
@@ -242,6 +302,7 @@ export function NewArrivals({
               <div className="justify-self-start max-md:justify-self-center">
                 <a
                   href={item.href}
+                  draggable={false}
                   className={cn(
                     "inline-flex items-center gap-2.5 py-2.5 px-4 rounded-full no-underline font-archivo text-[clamp(10px,0.82vw,13px)] tracking-[0.26em] uppercase whitespace-nowrap bg-transparent border-0 backdrop-blur-[18px] saturate-150 transition-all duration-[220ms] hover:gap-4",
                     isDark ? "text-[#f4f1ea]" : "text-[#1a1a1a]"
