@@ -67,7 +67,7 @@ export function Hero({
         {showRule && (
           <div
             className={cn(
-              "w-[clamp(160px,26vw,420px)] h-px -mt-14 opacity-70 origin-center",
+              "w-[clamp(160px,26vw,420px)] h-px -mt-2 sm:-mt-6 md:-mt-10 lg:-mt-14 opacity-70 origin-center",
               isDark ? "bg-[rgba(244,241,234,0.6)]" : "bg-[rgba(42,39,34,0.62)]"
             )}
           />

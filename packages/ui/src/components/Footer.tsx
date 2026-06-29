@@ -99,9 +99,9 @@ export function Footer({
             className={cn(
               fontClass,
               "w-full mt-16 font-normal leading-[0.82] select-none pointer-events-none flex justify-between",
+              "text-[clamp(44px,17vw,90px)] lg:text-[clamp(90px,22vw,400px)]",
               "bg-gradient-to-b from-[rgba(247,244,238,0.16)] via-[rgba(247,244,238,0.04)] to-transparent bg-clip-text text-transparent"
             )}
-            style={{ fontSize: "clamp(90px, 25vw, 450px)" }}
           >
             {wordmark.split("").map((char, i) => (
               <span key={i}>{char}</span>

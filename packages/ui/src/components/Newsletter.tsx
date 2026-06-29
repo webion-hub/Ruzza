@@ -86,7 +86,7 @@ export function Newsletter({
               "checked:after:content-[''] checked:after:w-[5px] checked:after:h-[10px] checked:after:border-[#14130f] checked:after:border-solid checked:after:border-[0_2px_2px_0] checked:after:rotate-45 checked:after:-translate-y-px"
             )}
           />
-          <span className="font-archivo text-sm leading-[1.5] text-[rgba(247,244,238,0.62)] whitespace-nowrap">
+          <span className="font-archivo text-sm leading-[1.5] text-[rgba(247,244,238,0.62)]">
             {privacyLabel}{" "}
             <a
               href={privacyLinkHref}
