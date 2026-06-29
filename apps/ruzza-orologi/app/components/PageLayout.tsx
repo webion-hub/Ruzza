@@ -34,7 +34,6 @@ export function PageLayout({
   return (
     <Aside.Provider>
       <CartAside cart={cart} />
-      <SearchAside />
       {header && (
         <RuzzaHeaderWrapper
           header={header}
@@ -55,6 +54,7 @@ interface RuzzaHeaderWrapperProps {
 
 function RuzzaHeaderWrapper({header, cart, isHomepage}: RuzzaHeaderWrapperProps) {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [searchOpen, setSearchOpen] = useState(false);
   const {open: openAside} = useAside();
   const {pathname} = useLocation();
   const isWatches = pathname.startsWith('/collections/orologi');
@@ -124,14 +124,11 @@ function RuzzaHeaderWrapper({header, cart, isHomepage}: RuzzaHeaderWrapperProps)
       trailingLinks={trailingLinks}
       telegramHref="https://t.me/ruzzaorologi"
       telegramLabel="Canale Telegram"
-      searchPlaceholder="Cerca nel catalogo..."
       cartAriaLabel="Carrello"
       searchAriaLabel="Cerca"
-      onSearch={(query: string) => {
-        if (query) {
-          openAside('search');
-        }
-      }}
+      searchOpen={searchOpen}
+      onSearchOpenChange={setSearchOpen}
+      searchPanel={<HeaderSearchPanel onNavigate={() => setSearchOpen(false)} />}
       onCartClick={() => openAside('cart')}
       theme={theme}
     />
@@ -156,29 +153,36 @@ function CartAside({cart}: CartAsideProps) {
   );
 }
 
-function SearchAside() {
+function HeaderSearchPanel({onNavigate}: {onNavigate: () => void}) {
   const queriesDatalistId = useId();
   return (
-    <Aside type="search" heading="CERCA">
-      <div className="predictive-search">
-        <br />
-        <SearchFormPredictive>
+    <div
+      className="text-[#1a1815]"
+      onClickCapture={(e) => {
+        if ((e.target as HTMLElement).closest('a')) onNavigate();
+      }}
+    >
+      <div className="flex flex-col gap-2">
+        <SearchFormPredictive className="w-full max-w-none flex items-center gap-2">
           {({fetchResults, goToSearch, inputRef}) => (
             <>
               <input
                 name="q"
+                autoFocus
                 onChange={fetchResults}
                 onFocus={fetchResults}
-                placeholder="Cerca orologi, marchi..."
+                placeholder="Cerca orologi, marchi…"
                 ref={inputRef}
                 type="search"
                 list={queriesDatalistId}
-                className="w-full px-4 py-3 border border-[rgba(42,39,34,0.2)] rounded-lg font-archivo text-base outline-none focus:border-[#2a2722] transition-colors"
+                className="flex-1 min-w-0 bg-[#f7f4ee] px-4 py-2.5 border border-[#d4d0c8] rounded-full font-archivo text-[15px] text-[#1a1815] outline-none focus:border-[#a39c92] transition-colors"
               />
-              &nbsp;
               <button
-                onClick={goToSearch}
-                className="px-6 py-3 bg-[#2a2722] text-[#f4f1ea] font-archivo font-medium text-sm tracking-wider uppercase rounded-lg hover:opacity-90 transition-opacity"
+                onClick={() => {
+                  goToSearch();
+                  onNavigate();
+                }}
+                className="flex-shrink-0 px-5 py-2.5 bg-[#1a1815] text-[#f7f4ee] font-archivo font-medium text-xs tracking-[0.1em] uppercase rounded-full hover:opacity-90 transition-opacity"
               >
                 Cerca
               </button>
@@ -238,6 +242,6 @@ function SearchAside() {
           }}
         </SearchResultsPredictive>
       </div>
-    </Aside>
+    </div>
   );
 }

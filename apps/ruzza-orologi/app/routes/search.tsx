@@ -28,7 +28,7 @@ type PredictiveSearchReturn = {
 };
 
 export const meta: Route.MetaFunction = () => {
-  return [{title: `Hydrogen | Search`}];
+  return [{title: `Ruzza Orologi | Ricerca`}];
 };
 
 export async function loader({request, context}: Route.LoaderArgs) {
@@ -54,37 +54,61 @@ export default function SearchPage() {
   if (type === 'predictive') return null;
 
   return (
-    <div className="search">
-      <h1>Search</h1>
-      <SearchForm>
-        {({inputRef}) => (
-          <>
-            <input
-              defaultValue={term}
-              name="q"
-              placeholder="Search…"
-              ref={inputRef}
-              type="search"
-            />
-            &nbsp;
-            <button type="submit">Search</button>
-          </>
-        )}
-      </SearchForm>
-      {error && <p style={{color: 'red'}}>{error}</p>}
-      {!term || !result?.total ? (
-        <SearchResults.Empty />
-      ) : (
-        <SearchResults result={result} term={term}>
-          {({articles, pages, products, term}) => (
-            <div>
-              <SearchResults.Products products={products} term={term} />
-              <SearchResults.Pages pages={pages} term={term} />
-              <SearchResults.Articles articles={articles} term={term} />
-            </div>
+    <div className="min-h-screen bg-[#f7f4ee]">
+      <div className="max-w-[1400px] mx-auto px-6 lg:px-20">
+        {/* Header */}
+        <div className="pt-32 pb-10">
+          <div className="font-archivo text-xs tracking-[0.34em] uppercase text-[#a39c92] mb-4">
+            Ricerca
+          </div>
+          <h1 className="font-['Libre_Baskerville'] font-light text-[clamp(34px,5vw,56px)] leading-[1.1] text-[#1a1815]">
+            {term ? <>Risultati per &ldquo;{term}&rdquo;</> : 'Cerca nel catalogo'}
+          </h1>
+
+          {/* Search form */}
+          <SearchForm className="w-full max-w-none">
+            {({inputRef}) => (
+              <div className="mt-8 flex items-center gap-3 max-w-[560px]">
+                <input
+                  defaultValue={term}
+                  name="q"
+                  placeholder="Cerca orologi, marchi…"
+                  ref={inputRef}
+                  type="search"
+                  className="w-full bg-white px-5 py-3.5 border border-[#d4d0c8] rounded-full font-archivo text-base text-[#1a1815] outline-none focus:border-[#a39c92] transition-colors"
+                />
+                <button
+                  type="submit"
+                  className="flex-shrink-0 px-7 py-3.5 bg-[#1a1815] text-[#f7f4ee] font-archivo font-medium text-sm tracking-[0.1em] uppercase rounded-full hover:opacity-90 transition-opacity"
+                >
+                  Cerca
+                </button>
+              </div>
+            )}
+          </SearchForm>
+
+          {error && (
+            <p className="mt-4 font-archivo text-sm text-[#c0563f]">{error}</p>
           )}
-        </SearchResults>
-      )}
+        </div>
+      </div>
+
+      <div className="max-w-[1400px] mx-auto px-6 lg:px-20 pb-24">
+        {!term || !result?.total ? (
+          <SearchResults.Empty />
+        ) : (
+          <SearchResults result={result} term={term}>
+            {({articles, pages, products, term}) => (
+              <div className="flex flex-col gap-16">
+                <SearchResults.Products products={products} term={term} />
+                <SearchResults.Pages pages={pages} term={term} />
+                <SearchResults.Articles articles={articles} term={term} />
+              </div>
+            )}
+          </SearchResults>
+        )}
+      </div>
+
       <Analytics.SearchView data={{searchTerm: term, searchResults: result}} />
     </div>
   );
