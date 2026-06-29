@@ -61,8 +61,11 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
   // The API handle might be localized, so redirect to the localized handle
   redirectIfHandleIsLocalized(request, {handle, data: product});
 
+  const productUrl = `${new URL(request.url).origin}/products/${product.handle}`;
+
   return {
     product,
+    productUrl,
   };
 }
 
@@ -79,7 +82,7 @@ function loadDeferredData({context, params}: Route.LoaderArgs) {
 }
 
 export default function Product() {
-  const {product} = useLoaderData<typeof loader>();
+  const {product, productUrl} = useLoaderData<typeof loader>();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   // Optimistically selects a variant with given available variant information
@@ -209,6 +212,8 @@ export default function Product() {
             <ProductForm
               productOptions={productOptions}
               selectedVariant={selectedVariant}
+              productTitle={product.title}
+              productUrl={productUrl}
             />
 
             {/* Product Details Accordion */}
