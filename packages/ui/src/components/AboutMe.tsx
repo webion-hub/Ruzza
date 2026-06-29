@@ -33,7 +33,7 @@ export function AboutMe({
       )}
     >
       {/* Eyebrow */}
-      <div className="z-[5] font-archivo text-[13px] tracking-[0.34em] uppercase text-[rgba(247,244,238,0.6)] mb-[clamp(60px,12vh,120px)]">
+      <div className="z-[5] font-archivo text-[13px] tracking-[0.34em] uppercase text-[rgba(247,244,238,0.6)] mb-[clamp(48px,10vh,96px)]">
         {eyebrow}
       </div>
 
