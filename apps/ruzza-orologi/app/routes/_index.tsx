@@ -20,6 +20,11 @@ export const meta: Route.MetaFunction = () => {
   return [{title: 'Ruzza Orologi | Home'}];
 };
 
+// Preload the hero marble background so it appears without a delay on load.
+export const links: Route.LinksFunction = () => [
+  {rel: 'preload', as: 'image', href: '/assets/marble-bg.jpg'},
+];
+
 export async function loader(args: Route.LoaderArgs) {
   const deferredData = loadDeferredData(args);
   const criticalData = await loadCriticalData(args);
@@ -88,7 +93,7 @@ export default function Homepage() {
       {/* Marble zone — the marble shows ONLY behind the hero + collection, stays
           fixed to the viewport, and never bleeds past this section. */}
       <div className="relative">
-        <MarbleBackground imageSrc="/assets/marble-bg-4k.png" />
+        <MarbleBackground imageSrc="/assets/marble-bg.jpg" />
 
       {/* Hero Section */}
       <Hero

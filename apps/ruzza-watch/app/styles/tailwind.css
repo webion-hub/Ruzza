@@ -1,0 +1,134 @@
+/* Fonts are preloaded in root.tsx links() for better performance */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Background */
+    --ruzza-bg-light: #f6f4f0;
+    --ruzza-bg-dark: #0c0b0a;
+    --ruzza-bg-dark-alt: #0d0c0e;
+    --ruzza-bg-hero: #121113;
+
+    /* Ink (Text) */
+    --ruzza-ink: #2a2722;
+    --ruzza-ink-light: #f7f4ee;
+    --ruzza-ink-light-alt: #f2efe9;
+    --ruzza-ink-soft: rgba(42, 39, 34, 0.62);
+    --ruzza-ink-soft-light: rgba(244, 241, 234, 0.62);
+
+    /* Accent */
+    --ruzza-accent-gold: #b78a4a;
+    --ruzza-accent-error: #c0563f;
+
+    /* Nav Glass */
+    --ruzza-nav-bg: rgba(250, 249, 246, 0.5);
+    --ruzza-nav-border: rgba(255, 255, 255, 0.5);
+    --ruzza-nav-hover: rgba(42, 39, 34, 0.06);
+    --ruzza-nav-hover-strong: rgba(42, 39, 34, 0.08);
+    --ruzza-nav-divider: rgba(42, 39, 34, 0.14);
+
+    /* Menu */
+    --ruzza-menu-bg: rgba(252, 251, 248, 0.72);
+    --ruzza-menu-border: rgba(255, 255, 255, 0.55);
+    --ruzza-menu-rule: rgba(42, 39, 34, 0.1);
+
+    /* Telegram */
+    --ruzza-tg-bg: #2a2722;
+    --ruzza-tg-fg: #f4f1ea;
+
+    /* Shadows */
+    --ruzza-shadow-nav: 0 12px 40px -16px rgba(40, 36, 30, 0.3);
+    --ruzza-shadow-menu: 0 18px 50px -16px rgba(0, 0, 0, 0.4);
+    --ruzza-shadow-button: 0 8px 20px -8px rgba(40, 36, 30, 0.6);
+
+    /* Fonts */
+    --font-title: 'Libre Baskerville', 'Cormorant Garamond', Georgia, serif;
+    --font-title-alt: 'Cormorant Garamond', Georgia, serif;
+    --font-body: 'Archivo', system-ui, sans-serif;
+  }
+
+  [data-theme="dark"] {
+    --ruzza-ink: #f7f4ee;
+    --ruzza-ink-soft: rgba(244, 241, 234, 0.62);
+
+    --ruzza-nav-bg: rgba(22, 21, 24, 0.42);
+    --ruzza-nav-border: rgba(255, 255, 255, 0.14);
+    --ruzza-nav-hover: rgba(255, 255, 255, 0.08);
+    --ruzza-nav-hover-strong: rgba(255, 255, 255, 0.12);
+    --ruzza-nav-divider: rgba(255, 255, 255, 0.16);
+
+    --ruzza-menu-bg: rgba(28, 27, 30, 0.72);
+    --ruzza-menu-border: rgba(255, 255, 255, 0.14);
+    --ruzza-menu-rule: rgba(255, 255, 255, 0.12);
+
+    --ruzza-tg-bg: #f2efe9;
+    --ruzza-tg-fg: #1a1a1d;
+
+    --ruzza-shadow-nav: 0 14px 44px -16px rgba(0, 0, 0, 0.55);
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: var(--font-body);
+    color: var(--ruzza-ink);
+    background: var(--ruzza-bg-light);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Hide scrollbar for carousel */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@layer utilities {
+  .font-title {
+    font-family: var(--font-title);
+  }
+
+  .font-title-alt {
+    font-family: var(--font-title-alt);
+  }
+
+  .font-archivo {
+    font-family: var(--font-body);
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .text-pretty {
+    text-wrap: pretty;
+  }
+
+  /* Glass morphism utilities */
+  .glass-light {
+    background: var(--ruzza-nav-bg);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+  }
+
+  .glass-dark {
+    background: rgba(22, 21, 24, 0.42);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+  }
+}

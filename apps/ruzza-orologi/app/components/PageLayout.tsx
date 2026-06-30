@@ -166,9 +166,9 @@ function HeaderSearchPanel({onNavigate}: {onNavigate: () => void}) {
         <SearchFormPredictive className="w-full max-w-none flex items-center gap-2">
           {({fetchResults, goToSearch, inputRef}) => (
             <>
-              <input
+              {/* eslint-disable-next-line jsx-a11y/no-autofocus -- the field renders only when the user explicitly opens search, so focusing it is the expected behaviour */}
+              <input autoFocus
                 name="q"
-                autoFocus
                 onChange={fetchResults}
                 onFocus={fetchResults}
                 placeholder="Cerca orologi, marchi…"

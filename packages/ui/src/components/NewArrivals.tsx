@@ -126,13 +126,19 @@ export function NewArrivals({
     if (!isDraggingRef.current) return;
     isDraggingRef.current = false;
     const track = trackRef.current;
-    if (track) {
-      track.style.scrollSnapType = "";
-      if (track.hasPointerCapture(e.pointerId)) {
-        track.releasePointerCapture(e.pointerId);
-      }
+    if (!track) return;
+    if (track.hasPointerCapture(e.pointerId)) {
+      track.releasePointerCapture(e.pointerId);
     }
+    // Smooth-scroll to the nearest slide with snap still disabled. Re-enabling
+    // snap-mandatory now would snap instantly and fight the animation (the jerky
+    // release), so restore it only once the scroll has settled.
     goTo(getNearestIndex());
+    window.setTimeout(() => {
+      if (!isDraggingRef.current && trackRef.current) {
+        trackRef.current.style.scrollSnapType = "";
+      }
+    }, 500);
   };
 
   // Swallow the click that fires after a drag, so dragging never triggers a link.

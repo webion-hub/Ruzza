@@ -22,7 +22,8 @@ type NavDropdown = {
 };
 
 type HeaderProps = {
-  readonly logoSrc: string;
+  readonly logoSrc?: string;
+  readonly logoText?: string;
   readonly logoAlt?: string;
   readonly logoHref?: string;
   readonly links?: readonly NavLink[];
@@ -30,7 +31,12 @@ type HeaderProps = {
   readonly trailingLinks?: readonly NavLink[];
   readonly telegramHref?: string;
   readonly telegramLabel?: string;
+  readonly hideTelegram?: boolean;
+  readonly hideSearch?: boolean;
   readonly cartAriaLabel?: string;
+  readonly cartText?: string;
+  readonly cartCount?: number;
+  readonly cartStyle?: "default" | "gold";
   readonly searchAriaLabel?: string;
   /** Whether the search panel is open (controlled by the host app). */
   readonly searchOpen?: boolean;
@@ -40,11 +46,14 @@ type HeaderProps = {
   readonly searchPanel?: React.ReactNode;
   readonly onCartClick?: () => void;
   readonly theme?: "light" | "dark";
+  /** Layout variant: "compact" (pill-shaped) or "wide" (almost full-width bar) */
+  readonly variant?: "compact" | "wide";
   readonly className?: string;
 };
 
 export function Header({
   logoSrc,
+  logoText,
   logoAlt = "Ruzza",
   logoHref = "/",
   links = [],
@@ -52,13 +61,19 @@ export function Header({
   trailingLinks = [],
   telegramHref = "#",
   telegramLabel = "Canale Telegram",
+  hideTelegram = false,
+  hideSearch = false,
   cartAriaLabel = "Carrello",
+  cartText,
+  cartCount,
+  cartStyle = "default",
   searchAriaLabel = "Cerca",
   searchOpen = false,
   onSearchOpenChange,
   searchPanel,
   onCartClick,
   theme = "light",
+  variant = "compact",
   className,
 }: HeaderProps) {
   const [openDropdown, setOpenDropdown] = React.useState<string | null>(null);
@@ -103,6 +118,8 @@ export function Header({
       : "bg-[rgba(252,251,248,0.92)] border border-[rgba(255,255,255,0.55)]"
   );
 
+  const isWide = variant === "wide";
+
   return (
     <header
       ref={headerRef}
@@ -114,33 +131,60 @@ export function Header({
     >
       <div
         className={cn(
-          "relative inline-flex items-center gap-[clamp(6px,0.8vw,13px)] px-[clamp(8px,0.8vw,13px)] py-[clamp(6px,0.55vw,9px)] rounded-full",
+          "relative items-center",
           "before:content-[''] before:absolute before:inset-0 before:rounded-[inherit] before:backdrop-blur-[20px] before:saturate-150 before:-z-10",
-          isDark
-            ? "before:bg-[rgba(22,21,24,0.42)] before:border before:border-[rgba(255,255,255,0.14)] before:shadow-[0_14px_44px_-16px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.12)]"
-            : "before:bg-[rgba(250,249,246,0.5)] before:border before:border-[rgba(255,255,255,0.5)] before:shadow-[0_12px_40px_-16px_rgba(40,36,30,0.3),inset_0_1px_0_rgba(255,255,255,0.65)]"
+          isWide
+            ? "flex justify-between w-full max-w-[1400px] px-[clamp(20px,2.5vw,40px)] py-[clamp(10px,0.9vw,14px)] rounded-[14px] before:bg-[rgba(18,16,14,0.65)] before:border before:border-[rgba(255,255,255,0.06)]"
+            : cn(
+                "inline-flex gap-[clamp(6px,0.8vw,13px)] px-[clamp(8px,0.8vw,13px)] py-[clamp(6px,0.55vw,9px)] rounded-full",
+                isDark
+                  ? "before:bg-[rgba(22,21,24,0.42)] before:border before:border-[rgba(255,255,255,0.14)] before:shadow-[0_14px_44px_-16px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.12)]"
+                  : "before:bg-[rgba(250,249,246,0.5)] before:border before:border-[rgba(255,255,255,0.5)] before:shadow-[0_12px_40px_-16px_rgba(40,36,30,0.3),inset_0_1px_0_rgba(255,255,255,0.65)]"
+              )
         )}
       >
         {/* Logo */}
         <a href={logoHref} className="flex-shrink-0 block leading-none" aria-label={logoAlt}>
-          <img
-            src={logoSrc}
-            alt={logoAlt}
-            className={cn(
-              "w-[clamp(36px,2.9vw,50px)] h-[clamp(36px,2.9vw,50px)] object-contain transition-[filter] duration-[250ms]",
-              isDark && "invert brightness-[1.6]"
-            )}
-          />
+          {logoText ? (
+            <span
+              className={cn(
+                "font-['Libre_Baskerville'] font-normal text-[clamp(16px,1.3vw,22px)] tracking-[0.02em] whitespace-nowrap px-2",
+                isDark ? "text-[#f7f4ee]" : "text-[#2a2722]"
+              )}
+            >
+              {logoText.split(' ').map((word, i) => (
+                <span key={i}>
+                  {i === 0 ? (
+                    <span className="font-medium">{word}</span>
+                  ) : (
+                    <span className="font-normal tracking-[0.15em] text-[0.5em] uppercase ml-1.5 opacity-70">{word}</span>
+                  )}
+                </span>
+              ))}
+            </span>
+          ) : logoSrc ? (
+            <img
+              src={logoSrc}
+              alt={logoAlt}
+              className={cn(
+                "w-[clamp(36px,2.9vw,50px)] h-[clamp(36px,2.9vw,50px)] object-contain transition-[filter] duration-[250ms]",
+                isDark && "invert brightness-[1.6]"
+              )}
+            />
+          ) : null}
         </a>
 
         {/* Nav Links (desktop) */}
-        <nav className="hidden lg:flex items-center gap-[clamp(2px,0.35vw,7px)] max-w-[1000px]">
+        <nav className={cn(
+          "hidden lg:flex items-center gap-[clamp(2px,0.35vw,7px)]",
+          isWide ? "absolute left-1/2 -translate-x-1/2 gap-[clamp(16px,2vw,32px)]" : "max-w-[1000px]"
+        )}>
           {links.map((link) => (
             <a
               key={link.href}
               href={link.href}
               className={cn(
-                "font-archivo font-normal text-[clamp(11px,0.92vw,15px)] tracking-[0.03em] px-[18px] py-2 rounded-full inline-flex items-center gap-[5px] whitespace-nowrap no-underline transition-all duration-[180ms]",
+                "font-archivo font-normal text-[clamp(11px,0.92vw,15px)] tracking-[0.03em] px-[18px] py-2 rounded-[8px] inline-flex items-center gap-[5px] whitespace-nowrap no-underline hover:no-underline transition-all duration-[180ms]",
                 isDark ? "text-[#f2efe9] hover:bg-[rgba(255,255,255,0.08)]" : "text-[#2a2722] hover:bg-[rgba(42,39,34,0.06)]",
                 link.isActive && (isDark ? "font-medium bg-[rgba(255,255,255,0.12)]" : "font-medium bg-[rgba(42,39,34,0.08)]")
               )}
@@ -233,13 +277,15 @@ export function Header({
           ))}
         </nav>
 
-        {/* Divider */}
-        <div
-          className={cn(
-            "hidden lg:block w-px self-stretch my-[clamp(4px,0.5vw,8px)] mx-[clamp(2px,0.3vw,5px)]",
-            isDark ? "bg-[rgba(255,255,255,0.16)]" : "bg-[rgba(42,39,34,0.14)]"
-          )}
-        />
+        {/* Divider - hidden in wide variant */}
+        {!isWide && (
+          <div
+            className={cn(
+              "hidden lg:block w-px self-stretch my-[clamp(4px,0.5vw,8px)] mx-[clamp(2px,0.3vw,5px)]",
+              isDark ? "bg-[rgba(255,255,255,0.16)]" : "bg-[rgba(42,39,34,0.14)]"
+            )}
+          />
+        )}
 
         {/* Actions */}
         <div className="flex items-center gap-[clamp(2px,0.35vw,6px)] flex-shrink-0">
@@ -267,28 +313,30 @@ export function Header({
           </button>
 
           {/* Search Button */}
-          <button
-            type="button"
-            aria-label={searchAriaLabel}
-            aria-expanded={searchOpen}
-            onClick={handleSearchToggle}
-            className={cn(
-              "appearance-none border-0 bg-transparent cursor-pointer w-[clamp(30px,2.4vw,38px)] h-[clamp(30px,2.4vw,38px)] grid place-items-center rounded-full transition-colors duration-[180ms]",
-              isDark ? "text-[#f2efe9] hover:bg-[rgba(255,255,255,0.12)]" : "text-[#2a2722] hover:bg-[rgba(42,39,34,0.08)]",
-              searchOpen && (isDark ? "bg-[rgba(255,255,255,0.12)]" : "bg-[rgba(42,39,34,0.08)]")
-            )}
-          >
-            {searchOpen ? (
-              <svg className="w-[46%] h-[46%]" viewBox="0 0 24 24" fill="none">
-                <path d="M6 6l12 12M6 18L18 6" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
-              </svg>
-            ) : (
-              <svg className="w-[46%] h-[46%]" viewBox="0 0 24 24" fill="none">
-                <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8" />
-                <path d="m20 20-3.2-3.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-              </svg>
-            )}
-          </button>
+          {!hideSearch && (
+            <button
+              type="button"
+              aria-label={searchAriaLabel}
+              aria-expanded={searchOpen}
+              onClick={handleSearchToggle}
+              className={cn(
+                "appearance-none border-0 bg-transparent cursor-pointer w-[clamp(30px,2.4vw,38px)] h-[clamp(30px,2.4vw,38px)] grid place-items-center rounded-full transition-colors duration-[180ms]",
+                isDark ? "text-[#f2efe9] hover:bg-[rgba(255,255,255,0.12)]" : "text-[#2a2722] hover:bg-[rgba(42,39,34,0.08)]",
+                searchOpen && (isDark ? "bg-[rgba(255,255,255,0.12)]" : "bg-[rgba(42,39,34,0.08)]")
+              )}
+            >
+              {searchOpen ? (
+                <svg className="w-[46%] h-[46%]" viewBox="0 0 24 24" fill="none">
+                  <path d="M6 6l12 12M6 18L18 6" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+                </svg>
+              ) : (
+                <svg className="w-[46%] h-[46%]" viewBox="0 0 24 24" fill="none">
+                  <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8" />
+                  <path d="m20 20-3.2-3.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                </svg>
+              )}
+            </button>
+          )}
 
           {/* Cart Button */}
           <button
@@ -296,35 +344,57 @@ export function Header({
             aria-label={cartAriaLabel}
             onClick={onCartClick}
             className={cn(
-              "appearance-none border-0 bg-transparent cursor-pointer w-[clamp(30px,2.4vw,38px)] h-[clamp(30px,2.4vw,38px)] grid place-items-center rounded-full transition-colors duration-[180ms]",
-              isDark ? "text-[#f2efe9] hover:bg-[rgba(255,255,255,0.12)]" : "text-[#2a2722] hover:bg-[rgba(42,39,34,0.08)]"
+              "appearance-none border-0 cursor-pointer transition-all duration-[180ms]",
+              cartText
+                ? cartStyle === "gold"
+                  ? "flex items-center gap-2.5 px-[clamp(16px,1.4vw,24px)] py-[clamp(10px,0.8vw,14px)] rounded-[8px] bg-[#b9a068] text-[#1a1815] hover:bg-[#c4aa72]"
+                  : cn(
+                      "flex items-center gap-2 px-[clamp(12px,1vw,18px)] py-[clamp(6px,0.5vw,10px)] rounded-[8px] bg-transparent",
+                      isDark ? "text-[#f2efe9] hover:bg-[rgba(255,255,255,0.12)]" : "text-[#2a2722] hover:bg-[rgba(42,39,34,0.08)]"
+                    )
+                : cn(
+                    "w-[clamp(30px,2.4vw,38px)] h-[clamp(30px,2.4vw,38px)] grid place-items-center rounded-full bg-transparent",
+                    isDark ? "text-[#f2efe9] hover:bg-[rgba(255,255,255,0.12)]" : "text-[#2a2722] hover:bg-[rgba(42,39,34,0.08)]"
+                  )
             )}
           >
-            <svg className="w-[46%] h-[46%]" viewBox="0 0 24 24" fill="none">
+            <svg className={cartText ? "w-[18px] h-[18px]" : "w-[46%] h-[46%]"} viewBox="0 0 24 24" fill="none">
               <path d="M7 8h10l-1 12H8L7 8Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
               <path d="M9.5 9V6.5a2.5 2.5 0 0 1 5 0V9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
             </svg>
+            {cartText && (
+              <span className="font-archivo font-medium text-[clamp(10px,0.85vw,14px)] tracking-[0.08em] uppercase whitespace-nowrap">
+                {cartText}
+                {typeof cartCount === 'number' && (
+                  <span className="ml-2 inline-flex items-center justify-center min-w-[1.8em] h-[1.8em] rounded-full text-[0.75em] font-semibold bg-[#c8a35f] leading-none">
+                    {cartCount}
+                  </span>
+                )}
+              </span>
+            )}
           </button>
 
           {/* Telegram Button (desktop) */}
-          <a
-            href={telegramHref}
-            className={cn(
-              "hidden lg:inline-flex appearance-none cursor-pointer border-0 ml-[clamp(1px,0.2vw,4px)] items-center gap-1.5 font-archivo font-medium text-[clamp(9px,0.74vw,12px)] tracking-[0.07em] uppercase py-[clamp(7px,0.7vw,11px)] px-[clamp(11px,1.05vw,16px)] rounded-full whitespace-nowrap no-underline transition-all duration-[180ms] hover:-translate-y-px",
-              isDark
-                ? "bg-[#f2efe9] text-[#1a1a1d] hover:shadow-[0_8px_20px_-8px_rgba(0,0,0,0.6)]"
-                : "bg-[#2a2722] text-[#f4f1ea] hover:shadow-[0_8px_20px_-8px_rgba(40,36,30,0.6)]"
-            )}
-          >
-            <svg className="w-[1.05em] h-[1.05em]" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M21.5 3.5 2.8 10.9c-1.1.4-1.1 1.6-.2 1.9l4.7 1.5 1.8 5.6c.2.7.7.9 1.3.4l2.6-2.4 4.7 3.5c.6.4 1.4.1 1.6-.7l3.2-15.1c.2-1-.5-1.7-1.5-1.6Zm-3.6 4-7.6 6.9-.3 3.4-1.5-4.7 9-5.9c.4-.3.9.2.4.3Z" />
-            </svg>
-            {telegramLabel}
-          </a>
+          {!hideTelegram && (
+            <a
+              href={telegramHref}
+              className={cn(
+                "hidden lg:inline-flex appearance-none cursor-pointer border-0 ml-[clamp(1px,0.2vw,4px)] items-center gap-1.5 font-archivo font-medium text-[clamp(9px,0.74vw,12px)] tracking-[0.07em] uppercase py-[clamp(7px,0.7vw,11px)] px-[clamp(11px,1.05vw,16px)] rounded-full whitespace-nowrap no-underline transition-all duration-[180ms] hover:-translate-y-px",
+                isDark
+                  ? "bg-[#f2efe9] text-[#1a1a1d] hover:shadow-[0_8px_20px_-8px_rgba(0,0,0,0.6)]"
+                  : "bg-[#2a2722] text-[#f4f1ea] hover:shadow-[0_8px_20px_-8px_rgba(40,36,30,0.6)]"
+              )}
+            >
+              <svg className="w-[1.05em] h-[1.05em]" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M21.5 3.5 2.8 10.9c-1.1.4-1.1 1.6-.2 1.9l4.7 1.5 1.8 5.6c.2.7.7.9 1.3.4l2.6-2.4 4.7 3.5c.6.4 1.4.1 1.6-.7l3.2-15.1c.2-1-.5-1.7-1.5-1.6Zm-3.6 4-7.6 6.9-.3 3.4-1.5-4.7 9-5.9c.4-.3.9.2.4.3Z" />
+              </svg>
+              {telegramLabel}
+            </a>
+          )}
         </div>
 
         {/* Search panel (always light for readable results) */}
-        {searchOpen && (
+        {!hideSearch && searchOpen && (
           <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-[calc(100vw-24px)] max-w-[560px] flex flex-col p-3 rounded-[18px] bg-white border border-[rgba(0,0,0,0.08)] shadow-[0_18px_50px_-16px_rgba(0,0,0,0.4)] max-h-[calc(100vh-96px)] overflow-y-auto">
             {searchPanel}
           </div>
@@ -411,18 +481,20 @@ export function Header({
               </a>
             ))}
 
-            <a
-              href={telegramHref}
-              className={cn(
-                "mt-2 inline-flex items-center justify-center gap-2 font-archivo font-medium text-[12px] tracking-[0.07em] uppercase py-3 px-4 rounded-full no-underline transition-opacity duration-[180ms] hover:opacity-90",
-                isDark ? "bg-[#f2efe9] text-[#1a1a1d]" : "bg-[#2a2722] text-[#f4f1ea]"
-              )}
-            >
-              <svg className="w-[1.05em] h-[1.05em]" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M21.5 3.5 2.8 10.9c-1.1.4-1.1 1.6-.2 1.9l4.7 1.5 1.8 5.6c.2.7.7.9 1.3.4l2.6-2.4 4.7 3.5c.6.4 1.4.1 1.6-.7l3.2-15.1c.2-1-.5-1.7-1.5-1.6Zm-3.6 4-7.6 6.9-.3 3.4-1.5-4.7 9-5.9c.4-.3.9.2.4.3Z" />
-              </svg>
-              {telegramLabel}
-            </a>
+            {!hideTelegram && (
+              <a
+                href={telegramHref}
+                className={cn(
+                  "mt-2 inline-flex items-center justify-center gap-2 font-archivo font-medium text-[12px] tracking-[0.07em] uppercase py-3 px-4 rounded-full no-underline transition-opacity duration-[180ms] hover:opacity-90",
+                  isDark ? "bg-[#f2efe9] text-[#1a1a1d]" : "bg-[#2a2722] text-[#f4f1ea]"
+                )}
+              >
+                <svg className="w-[1.05em] h-[1.05em]" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M21.5 3.5 2.8 10.9c-1.1.4-1.1 1.6-.2 1.9l4.7 1.5 1.8 5.6c.2.7.7.9 1.3.4l2.6-2.4 4.7 3.5c.6.4 1.4.1 1.6-.7l3.2-15.1c.2-1-.5-1.7-1.5-1.6Zm-3.6 4-7.6 6.9-.3 3.4-1.5-4.7 9-5.9c.4-.3.9.2.4.3Z" />
+                </svg>
+                {telegramLabel}
+              </a>
+            )}
           </div>
         )}
       </div>
